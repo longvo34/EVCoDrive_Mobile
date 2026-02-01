@@ -137,15 +137,13 @@ export default function VehicleDetailScreen({ route, navigation }) {
   try {
     setLoading(true);
 
-    // 1. Lấy memberId
+
     const memberRes = await getProfileMember();
     const memberId = memberRes.data.memberId;
 
-    // 2. Lấy danh sách contract của member
     const contractRes = await getContractsByMember(memberId);
     const contracts = contractRes.data.data || [];
 
-    // 3. Lấy contract đăng ký xe đã hoàn tất
     const vehicleContract = contracts.find(
       c =>
         c.contractType === "VehicleRegistration" &&
@@ -159,7 +157,6 @@ export default function VehicleDetailScreen({ route, navigation }) {
 
     const contractId = vehicleContract.contractId;
 
-    // 4. Tải PDF
     const token = await getAccessToken();
     const API_URL = Constants.expoConfig.extra.API_URL;
     const fileName = `Hop-dong-${contractId}.pdf`;
