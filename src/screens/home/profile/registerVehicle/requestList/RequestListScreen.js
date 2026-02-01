@@ -86,30 +86,58 @@ export default function RequestListScreen({ navigation }) {
     return `${brandName} ${model.name}`.trim() || "Xe không xác định";
   };
 
-  const renderStatus = (status) => {
-    switch (status) {
-      case "Pending":
-        return <Text style={{ color: "#d97706", fontWeight: "600" }}>Chờ duyệt</Text>;
+ const renderStatus = (status) => {
+  let text = "";
+  let color = COLORS.gray;
 
-      case "ReadyForInspection":
-        return <Text style={{ color: "#f59e0b", fontWeight: "600" }}>Sẵn sàng kiểm tra tại station</Text>;
+  switch (status) {
+    case "Pending":
+      text = "Chờ duyệt";
+      color = "#d97706";
+      break;
+    case "ReadyForInspection":
+      text = "Sẵn sàng kiểm tra tại station";
+      color = "#f59e0b";
+      break;
+    case "Inspecting":
+      text = "Đang kiểm tra tại station";
+      color = "#8b5cf6";
+      break;
+    case "SigningContract":
+      text = "Sẵn sàng ký hợp đồng";
+      color = "#2563eb";
+      break;
+    case "SaleEligible":
+      text = "Đã duyệt / Có thể bán";
+      color = COLORS.signingGreen;
+      break;
+    case "Rejected":
+      text = "Từ chối";
+      color = "#ef4444";
+      break;
+    default:
+      text = `Không xác định (${status})`;
+      color = COLORS.gray;
+  }
 
-      case "Inspecting":
-        return <Text style={{ color: "#8b5cf6", fontWeight: "600" }}>Đang kiểm tra tại station</Text>;
-
-      case "SigningContract":
-        return <Text style={{ color: "#2563eb", fontWeight: "bold" }}>Sẵn sàng ký hợp đồng</Text>;
-
-      case "SaleEligible":
-        return <Text style={{ color: COLORS.signingGreen, fontWeight: "bold" }}>Đã duyệt / Có thể bán</Text>;
-
-      case "Rejected":
-        return <Text style={{ color: "#ef4444", fontWeight: "bold" }}>Từ chối</Text>;
-
-      default:
-        return <Text style={{ color: COLORS.gray }}>Không xác định ({status})</Text>;
-    }
-  };
+  return (
+    <Text
+      style={{
+        color,
+        fontWeight: "600",
+        fontSize: 13,              
+        flexShrink: 1,              
+        textAlign: "right",        
+        flexWrap: 'wrap',          
+        maxWidth: '55%',            
+      }}
+      numberOfLines={2}           
+      ellipsizeMode="tail"          
+    >
+      {text}
+    </Text>
+  );
+};
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
