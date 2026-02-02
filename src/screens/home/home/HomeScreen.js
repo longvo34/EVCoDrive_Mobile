@@ -81,12 +81,15 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.userRow}>
-          <Image
-            source={{
-              uri: user?.avatarUrl || "https://i.pravatar.cc/100",
-            }}
-            style={styles.avatar}
-          />
+         <Image
+  source={{
+    uri:
+      user?.avatarUrl && user.avatarUrl.trim() !== ""
+        ? user.avatarUrl
+        : "https://www.gravatar.com/avatar/?d=mp&s=200",
+  }}
+  style={styles.avatar}
+/>
           <View>
             <Text style={styles.hello}>Xin chào</Text>
             <Text style={styles.username}>

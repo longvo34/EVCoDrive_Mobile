@@ -70,9 +70,11 @@ export default function ProfileScreen({ setIsLoggedIn }) {
 }}
         >
           <Image
-            source={{ uri: "https://i.pravatar.cc/150?img=3" }}
-            style={styles.avatar}
-          />
+  source={{
+    uri: "https://www.gravatar.com/avatar/?d=mp&s=150",
+  }}
+  style={styles.avatar}
+/>
 
           <Text style={styles.name}>
             {profile?.fullName || profile?.email || ""}
