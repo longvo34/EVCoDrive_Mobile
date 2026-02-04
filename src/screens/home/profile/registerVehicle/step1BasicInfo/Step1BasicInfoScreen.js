@@ -256,7 +256,6 @@ export default function Step1BasicInfoScreen({ navigation }) {
           }}
         />
 
-        {/* === THÊM KHỐI HIỂN THỊ CHI TIẾT DÒNG XE === */}
         {form.vehicleModel && (
           <View
             style={{
@@ -391,7 +390,6 @@ export default function Step1BasicInfoScreen({ navigation }) {
         <Text style={styles.nextText}>Tiếp tục →</Text>
       </TouchableOpacity>
 
-      {/* Modal chọn hãng xe */}
       <SelectModal
         visible={showBrandModal}
         data={brands}
@@ -407,7 +405,6 @@ export default function Step1BasicInfoScreen({ navigation }) {
         }}
       />
 
-      {/* Modal chọn dòng xe */}
       <SelectModal
         visible={showModelModal}
         data={filteredModels}
@@ -419,7 +416,6 @@ export default function Step1BasicInfoScreen({ navigation }) {
         }}
       />
 
-      {/* Modal chọn trạm sạc */}
       <SelectModal
         visible={showStationModal}
         data={stations}
@@ -581,7 +577,6 @@ function DropdownInput({ value, onPress, disabled }) {
   );
 }
 
-// === COMPONENT NHỎ HIỂN THỊ CHI TIẾT ===
 function DetailRow({ label, value }) {
   return (
     <View

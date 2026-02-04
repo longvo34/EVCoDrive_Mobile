@@ -198,7 +198,7 @@ export default function VehicleDetailScreen({ route, navigation }) {
       </View>
 
         <ScrollView showsVerticalScrollIndicator={false}>
-  {/* Phần ảnh xe */}
+ 
   {vehicle.images?.length > 0 ? (
     <>
       <FlatList
@@ -248,7 +248,7 @@ export default function VehicleDetailScreen({ route, navigation }) {
     </View>
   )}
 
-  {/* Card chính: Tên xe + Trạng thái + Nút hành động */}
+ 
   <View style={styles.card}>
     <Text style={styles.title}>
       {vehicle.vehicleModel?.brandName} {vehicle.vehicleModel?.name}
@@ -328,9 +328,7 @@ export default function VehicleDetailScreen({ route, navigation }) {
     )}
   </View>
 
-  {/* Card thông tin cơ bản + Chi tiết dòng xe */}
   <View style={styles.card}>
-    {/* Thông tin cơ bản */}
     <DetailRow label="Biển số" value={vehicle.licensePlate} />
     <DetailRow label="Màu sắc" value={vehicle.color} />
     <DetailRow label="Năm sản xuất" value={vehicle.year} />
@@ -352,11 +350,10 @@ export default function VehicleDetailScreen({ route, navigation }) {
       }
     />
 
-    {/* === KHỐI CHI TIẾT DÒNG XE - ĐẶT NGAY DƯỚI THÔNG TIN CƠ BẢN === */}
     {vehicle.vehicleModel && (
       <View
         style={{
-          marginTop: 20,  // khoảng cách với phần trên
+          marginTop: 20, 
           paddingTop: 16,
           borderTopWidth: 1,
           borderTopColor: "#e0e0e0",
