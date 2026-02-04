@@ -26,6 +26,26 @@ export default function Step4UploadDocsScreen() {
   const MAX_IMAGES = 6;
   const MIN_IMAGES = 1; 
 
+  useEffect(() => {
+    console.log("=== NHẬN DỮ LIỆU TỪ STEP 1 ===");
+    console.log("Full route.params:", JSON.stringify(route.params, null, 2));
+    console.log("step1Data nhận được:", JSON.stringify(step1Data, null, 2));
+    
+    if (!step1Data) {
+      console.warn("Cảnh báo: Không nhận được step1Data từ màn trước!");
+    } else {
+      console.log("Các field cụ thể:");
+      console.log("- vehicleModelId:", step1Data.vehicleModelId);
+      console.log("- stationId:", step1Data.stationId);
+      console.log("- licensePlate:", step1Data.licensePlate);
+      console.log("- color:", step1Data.color);
+      console.log("- year:", step1Data.year);
+      console.log("- odometer:", step1Data.odometer);
+      console.log("- batteryHealth:", step1Data.batteryHealth);
+      console.log("- lastMaintenanceDate:", step1Data.lastMaintenanceDate);
+    }
+  }, [route.params]);
+
 
   useEffect(() => {
     (async () => {

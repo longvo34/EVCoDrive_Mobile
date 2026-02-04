@@ -28,6 +28,7 @@ export const createVehicleWithImages = async (data, images = []) => {
 
   formData.append("VehicleModelId", data.vehicleModelId);
   formData.append("MemberId", memberId); 
+  formData.append("StationId", data.stationId);
   formData.append("LicensePlate", data.licensePlate);
   formData.append("Color", data.color);
   formData.append("Year", String(data.year));

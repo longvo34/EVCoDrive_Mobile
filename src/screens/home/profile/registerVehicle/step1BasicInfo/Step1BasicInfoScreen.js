@@ -14,6 +14,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import DateTimePicker from "@react-native-community/datetimepicker";
 import COLORS from "../../../../../constants/colors";
+import { getRecommendedStations } from "../../../../../services/station/station.service";
+import { getUserProfile } from "../../../../../services/user/user.service";
 import { getVehicleBrands } from "../../../../../services/vehicleBrand/vehicleBrand.service";
 import { getVehicleModels } from "../../../../../services/vehicleModel/vehicleModel.service";
 import styles from "./Step1BasicInfoScreen.styles";
@@ -27,9 +29,11 @@ const toNumberOrNull = (value) => {
 export default function Step1BasicInfoScreen({ navigation }) {
   const [brands, setBrands] = useState([]);
   const [models, setModels] = useState([]);
+  const [stations, setStations] = useState([]);
 
   const [showBrandModal, setShowBrandModal] = useState(false);
   const [showModelModal, setShowModelModal] = useState(false);
+  const [showStationModal, setShowStationModal] = useState(false);
 
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [showRegisterYearPicker, setShowRegisterYearPicker] = useState(false);
@@ -39,6 +43,7 @@ export default function Step1BasicInfoScreen({ navigation }) {
   const [form, setForm] = useState({
     vehicleBrand: null,
     vehicleModel: null,
+    station: null,
     yearManufacture: "",
     licensePlate: "",
     exteriorColor: "",
@@ -58,25 +63,61 @@ export default function Step1BasicInfoScreen({ navigation }) {
   }, []);
 
   const fetchInitData = async () => {
-    try {
-      const [brandRes, modelRes] = await Promise.all([
-        getVehicleBrands(),
-        getVehicleModels(),
-      ]);
-      setBrands(brandRes.data.data || []);
-      setModels(modelRes.data.data || []);
-    } catch (e) {
-      console.log("FETCH ERROR:", e);
+  try {
+    const profileRes = await getUserProfile();
+    
+    // Log toàn bộ response để xem chính xác
+    console.log("=== FULL PROFILE RESPONSE ===");
+    console.log("Status:", profileRes.status);
+    console.log("Data:", JSON.stringify(profileRes.data, null, 2));
+    console.log("Data keys:", Object.keys(profileRes.data || {}));
+    if (profileRes.data?.data) {
+      console.log("Nested data keys:", Object.keys(profileRes.data.data));
     }
-  };
+
+    // Thử lấy id từ nhiều vị trí có thể
+    const possibleIds = [
+      profileRes.data?.id,
+      profileRes.data?.data?.id,           // nếu response là { data: { id: ... } }
+      profileRes.data?.userId,
+      profileRes.data?.data?.userId,
+      profileRes.data?.memberId,
+      profileRes.data?.data?.memberId,
+    ];
+
+    const userId = possibleIds.find(id => id && typeof id === 'string' && id.trim() !== '');
+
+    console.log("Extracted userId (tìm thấy):", userId || "KHÔNG TÌM THẤY");
+
+    if (!userId) {
+      Alert.alert("Lỗi profile", "Không tìm thấy ID người dùng. Vui lòng kiểm tra đăng nhập.");
+      return; // dừng lại, không gọi API khác
+    }
+
+    const [brandRes, modelRes, stationRes] = await Promise.all([
+      getVehicleBrands(),
+      getVehicleModels(),
+      getRecommendedStations(userId),
+    ]);
+
+    setBrands(brandRes.data.data || []);
+    setModels(modelRes.data.data || []);
+    setStations(stationRes.data.data || []);
+
+  } catch (e) {
+    console.error("FETCH ERROR:", e.message);
+    if (e.response) {
+      console.error("API Error Response:", e.response.data);
+    }
+    Alert.alert("Lỗi", "Không tải được dữ liệu. Vui lòng thử lại sau.");
+  }
+};
 
   const filteredModels = form.vehicleBrand
-
     ? models.filter(
-      (m) =>
-        m.vehicleBrand.vehicleBrandId ===
-        form.vehicleBrand.vehicleBrandId
-    )
+        (m) =>
+          m.vehicleBrand?.vehicleBrandId === form.vehicleBrand?.vehicleBrandId
+      )
     : [];
 
   const hasModels = filteredModels.length > 0;
@@ -88,6 +129,11 @@ export default function Step1BasicInfoScreen({ navigation }) {
   const onNext = () => {
     if (!form.vehicleBrand) {
       Alert.alert("Thiếu thông tin", "Vui lòng chọn hãng xe");
+      return;
+    }
+
+    if (!form.station) {
+      Alert.alert("Thiếu thông tin", "Vui lòng chọn trạm sạc");
       return;
     }
 
@@ -123,10 +169,7 @@ export default function Step1BasicInfoScreen({ navigation }) {
       const batteryNum = Number(form.batteryHealth);
 
       if (batteryNum < 0) {
-        Alert.alert(
-          "Thông tin không hợp lệ",
-          "Tình trạng pin không được âm"
-        );
+        Alert.alert("Thông tin không hợp lệ", "Tình trạng pin không được âm");
         return;
       }
 
@@ -142,6 +185,7 @@ export default function Step1BasicInfoScreen({ navigation }) {
     navigation.navigate("VehicleStep4", {
       step1Data: {
         vehicleModelId: form.vehicleModel.vehicleModelId,
+        stationId: form.station.stationId,
         licensePlate: form.licensePlate,
         color: form.exteriorColor,
         year: Number(form.yearManufacture),
@@ -165,7 +209,6 @@ export default function Step1BasicInfoScreen({ navigation }) {
       <View style={styles.stepRow}>
         <View style={[styles.stepDot, styles.active]} />
         <View style={styles.stepDot} />
-
       </View>
 
       <Text style={styles.stepText}>Bước 1/2</Text>
@@ -173,12 +216,12 @@ export default function Step1BasicInfoScreen({ navigation }) {
       <Text style={styles.sectionTitle}>Thông tin cơ bản của xe</Text>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-
         <Label text="Hãng xe" />
         <DropdownInput
           value={form.vehicleBrand?.name || "Chọn hãng xe"}
           onPress={() => setShowBrandModal(true)}
         />
+
         <Label text="Dòng xe" />
         <DropdownInput
           disabled={!form.vehicleBrand || !hasModels}
@@ -186,13 +229,23 @@ export default function Step1BasicInfoScreen({ navigation }) {
             !form.vehicleBrand
               ? "Chọn hãng xe trước"
               : !hasModels
-                ? "Hãng này chưa có dòng xe"
-                : form.vehicleModel?.name || "Chọn dòng xe"
+              ? "Hãng này chưa có dòng xe"
+              : form.vehicleModel?.name || "Chọn dòng xe"
           }
           onPress={() => {
             if (!hasModels) return;
             setShowModelModal(true);
           }}
+        />
+
+        <Label text="Trạm sạc đăng ký xe" />
+        <DropdownInput
+          value={
+            form.station
+              ? `${form.station.name} • ${form.station.distanceKm || "?"} km`
+              : "Chọn trạm sạc"
+          }
+          onPress={() => setShowStationModal(true)}
         />
 
         <View style={styles.row2}>
@@ -217,19 +270,16 @@ export default function Step1BasicInfoScreen({ navigation }) {
         <Input
           placeholder="30A-123.45"
           value={form.licensePlate}
-          onChangeText={(v) =>
-            setForm({ ...form, licensePlate: v })
-          }
+          onChangeText={(v) => setForm({ ...form, licensePlate: v })}
         />
 
         <Label text="Màu ngoại thất" />
         <Input
           placeholder="Nhập màu sơn xe"
           value={form.exteriorColor}
-          onChangeText={(v) =>
-            setForm({ ...form, exteriorColor: v })
-          }
+          onChangeText={(v) => setForm({ ...form, exteriorColor: v })}
         />
+
         <Label text="ODO (km đã đi)" />
         <Input
           placeholder="Ví dụ: 25000"
@@ -255,8 +305,8 @@ export default function Step1BasicInfoScreen({ navigation }) {
             setForm({ ...form, batteryHealth: cleaned });
           }}
         />
-        <Label text="Ngày bảo dưỡng gần nhất" />
 
+        <Label text="Ngày bảo dưỡng gần nhất" />
         <TouchableOpacity
           style={styles.input}
           onPress={() => setShowMaintenancePicker(true)}
@@ -273,14 +323,11 @@ export default function Step1BasicInfoScreen({ navigation }) {
         </TouchableOpacity>
       </ScrollView>
 
-      <TouchableOpacity
-        style={styles.nextBtn}
-        onPress={onNext}
-      >
+      <TouchableOpacity style={styles.nextBtn} onPress={onNext}>
         <Text style={styles.nextText}>Tiếp tục →</Text>
       </TouchableOpacity>
 
-
+      {/* Modal chọn hãng xe */}
       <SelectModal
         visible={showBrandModal}
         data={brands}
@@ -296,6 +343,7 @@ export default function Step1BasicInfoScreen({ navigation }) {
         }}
       />
 
+      {/* Modal chọn dòng xe */}
       <SelectModal
         visible={showModelModal}
         data={filteredModels}
@@ -306,6 +354,19 @@ export default function Step1BasicInfoScreen({ navigation }) {
           setShowModelModal(false);
         }}
       />
+
+      {/* Modal chọn trạm sạc */}
+      <SelectModal
+        visible={showStationModal}
+        data={stations}
+        labelKey="name"
+        onClose={() => setShowStationModal(false)}
+        onSelect={(item) => {
+          setForm({ ...form, station: item });
+          setShowStationModal(false);
+        }}
+      />
+
       {showYearPicker && (
         <TouchableOpacity
           activeOpacity={1}
@@ -415,8 +476,6 @@ export default function Step1BasicInfoScreen({ navigation }) {
           </View>
         </TouchableOpacity>
       )}
-
-
     </SafeAreaView>
   );
 }
@@ -476,7 +535,7 @@ function SelectModal({ visible, data, labelKey, onSelect, onClose }) {
             borderRadius: 16,
             maxHeight: "70%",
           }}
-          onPress={() => { }}
+          onPress={() => {}}
         >
           <ScrollView>
             {data.map((item) => (
