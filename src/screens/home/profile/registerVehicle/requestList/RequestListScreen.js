@@ -21,18 +21,18 @@ export default function RequestListScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [vehicles, setVehicles] = useState([]);
-  const [brands, setBrands] = useState([]); 
-  const [models, setModels] = useState([]); 
+  const [brands, setBrands] = useState([]);
+  const [models, setModels] = useState([]);
 
   useEffect(() => {
     fetchInitialData();
   }, []);
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      fetchInitialData(); 
-    });
 
-    return unsubscribe; 
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      fetchInitialData();
+    });
+    return unsubscribe;
   }, [navigation]);
 
   const fetchInitialData = async () => {
@@ -45,11 +45,11 @@ export default function RequestListScreen({ navigation }) {
         getProfileMember(),
       ]);
 
-      const brandsData = Array.isArray(brandRes.data) 
-        ? brandRes.data 
+      const brandsData = Array.isArray(brandRes.data)
+        ? brandRes.data
         : brandRes.data?.data || brandRes || [];
-      const modelsData = Array.isArray(modelRes.data) 
-        ? modelRes.data 
+      const modelsData = Array.isArray(modelRes.data)
+        ? modelRes.data
         : modelRes.data?.data || modelRes || [];
 
       setBrands(brandsData);
@@ -75,69 +75,67 @@ export default function RequestListScreen({ navigation }) {
     fetchInitialData();
   };
 
-
   const getVehicleName = (modelId) => {
     const model = models.find((m) => m.vehicleModelId === modelId);
     if (!model) return "Xe không xác định";
 
-    const brand = brands.find((b) => b.vehicleBrandId === model.vehicleBrand.vehicleBrandId);
+    const brand = brands.find((b) => b.vehicleBrandId === model.vehicleBrand?.vehicleBrandId);
     const brandName = brand ? brand.name : "";
 
     return `${brandName} ${model.name}`.trim() || "Xe không xác định";
   };
 
- const renderStatus = (status) => {
-  let text = "";
-  let color = COLORS.gray;
+  const renderStatus = (status) => {
+    let text = "";
+    let color = COLORS.gray;
 
-  switch (status) {
-    case "Pending":
-      text = "Chờ duyệt";
-      color = "#d97706";
-      break;
-    case "ReadyForInspection":
-      text = "Sẵn sàng kiểm tra tại station";
-      color = "#f59e0b";
-      break;
-    case "Inspecting":
-      text = "Đang kiểm tra tại station";
-      color = "#8b5cf6";
-      break;
-    case "SigningContract":
-      text = "Sẵn sàng ký hợp đồng";
-      color = "#2563eb";
-      break;
-    case "SaleEligible":
-      text = "Đã duyệt / Có thể bán";
-      color = COLORS.signingGreen;
-      break;
-    case "Rejected":
-      text = "Từ chối";
-      color = "#ef4444";
-      break;
-    default:
-      text = `Không xác định (${status})`;
-      color = COLORS.gray;
-  }
+    switch (status) {
+      case "Pending":
+        text = "Chờ duyệt";
+        color = "#d97706";
+        break;
+      case "ReadyForInspection":
+        text = "Sẵn sàng kiểm tra tại station";
+        color = "#f59e0b";
+        break;
+      case "Inspecting":
+        text = "Đang kiểm tra tại station";
+        color = "#8b5cf6";
+        break;
+      case "SigningContract":
+        text = "Sẵn sàng ký hợp đồng";
+        color = "#2563eb";
+        break;
+      case "SaleEligible":
+        text = "Đã duyệt";
+        color = COLORS.signingGreen; // hoặc "#059669" nếu bạn muốn xanh lá đậm
+        break;
+      case "Rejected":
+        text = "Từ chối";
+        color = "#ef4444";
+        break;
+      default:
+        text = `Không xác định (${status})`;
+        color = COLORS.gray;
+    }
 
-  return (
-    <Text
-      style={{
-        color,
-        fontWeight: "600",
-        fontSize: 13,              
-        flexShrink: 1,              
-        textAlign: "right",        
-        flexWrap: 'wrap',          
-        maxWidth: '55%',            
-      }}
-      numberOfLines={2}           
-      ellipsizeMode="tail"          
-    >
-      {text}
-    </Text>
-  );
-};
+    return (
+      <Text
+        style={{
+          color,
+          fontWeight: "600",
+          fontSize: 13,
+          textAlign: "right",
+          flexShrink: 1,
+          maxWidth: "60%",
+        }}
+        numberOfLines={2}
+        ellipsizeMode="tail"
+      >
+        {text}
+      </Text>
+    );
+  };
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
@@ -145,9 +143,7 @@ export default function RequestListScreen({ navigation }) {
       onPress={() => {
         navigation.navigate("RegisterVehicle", {
           screen: "VehicleDetail",
-          params: {
-            vehicleId: item.vehicleId,
-          },
+          params: { vehicleId: item.vehicleId },
         });
       }}
     >
@@ -164,6 +160,21 @@ export default function RequestListScreen({ navigation }) {
 
       {item.licensePlate && (
         <Text style={styles.note}>🚘 {item.licensePlate}</Text>
+      )}
+
+      {/* Nút "Đăng bán ngay" chỉ hiện khi SaleEligible */}
+      {item.vehicleStatus === "SaleEligible" && (
+        <TouchableOpacity
+          style={styles.sellNowButton}
+          onPress={() => {
+            navigation.navigate("RegisterVehicle", {
+              screen: "SellRequest",
+              params: { vehicleId: item.vehicleId },
+            });
+          }}
+        >
+          <Text style={styles.sellNowText}>Đăng bán ngay</Text>
+        </TouchableOpacity>
       )}
     </TouchableOpacity>
   );

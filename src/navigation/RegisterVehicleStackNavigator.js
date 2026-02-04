@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import ContractScreen from "../screens/home/profile/registerVehicle/contract/ContractScreen";
 import RequestListScreen from "../screens/home/profile/registerVehicle/requestList/RequestListScreen";
+import SellRequestScreen from "../screens/home/profile/registerVehicle/sellRequest/SellRequestScreen";
 import Step1BasicInfoScreen from "../screens/home/profile/registerVehicle/step1BasicInfo/Step1BasicInfoScreen";
 import Step2TechnicalInfoScreen from "../screens/home/profile/registerVehicle/step2TechnicalInfo/Step2TechnicalInfoScreen";
 import Step3OwnerInfoScreen from "../screens/home/profile/registerVehicle/step3OwnerInfo/Step3OwnerInfoScreen";
@@ -23,6 +24,7 @@ export default function RegisterVehicleStackNavigator() {
         component={VehicleDetailScreen}
       />
       <Stack.Screen name="ContractScreen" component={ContractScreen} />
+      <Stack.Screen name="SellRequest" component={SellRequestScreen} />
     </Stack.Navigator>
   );
 }

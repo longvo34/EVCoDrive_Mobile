@@ -141,4 +141,26 @@ emptyDesc: {
   color: COLORS.gray,
   textAlign: "center",
 },
+
+sellNowButton: {
+  marginTop: 12,
+  backgroundColor: COLORS.primary, 
+  paddingVertical: 10,
+  paddingHorizontal: 20,
+  borderRadius: 999, 
+  alignSelf: "flex-start",
+  elevation: 2,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.15,
+  shadowRadius: 3,
+},
+
+sellNowText: {
+  color: COLORS.black, 
+  fontSize: 14,
+  fontWeight: "700",
+  textAlign: "center",
+},
+
 });
