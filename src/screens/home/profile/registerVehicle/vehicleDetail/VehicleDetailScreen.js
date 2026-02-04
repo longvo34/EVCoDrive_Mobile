@@ -29,7 +29,7 @@ export default function VehicleDetailScreen({ route, navigation }) {
 
   const [loading, setLoading] = useState(true);
   const [vehicle, setVehicle] = useState(null);
-  const [hasSignedLocally, setHasSignedLocally] = useState(false); 
+  const [hasSignedLocally, setHasSignedLocally] = useState(false);
 
   const flatListRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -123,6 +123,60 @@ export default function VehicleDetailScreen({ route, navigation }) {
     );
   };
 
+  const downloadContractPdf = async () => {
+    try {
+      setLoading(true);
+
+      const memberRes = await getProfileMember();
+      const memberId = memberRes.data.memberId;
+
+      const contractRes = await getContractsByMember(memberId);
+      const contracts = contractRes.data.data || [];
+
+      const vehicleContract = contracts.find(
+        (c) =>
+          c.contractType === "VehicleRegistration" &&
+          c.contractStatuses === "Completed"
+      );
+
+      if (!vehicleContract) {
+        Alert.alert("Không tìm thấy hợp đồng");
+        return;
+      }
+
+      const contractId = vehicleContract.contractId;
+
+      const token = await getAccessToken();
+      const API_URL = Constants.expoConfig.extra.API_URL;
+      const fileName = `Hop-dong-${contractId}.pdf`;
+      const fileUri = FileSystem.documentDirectory + fileName;
+
+      const downloadUrl = `${API_URL}/contracts/${contractId}/pdf`;
+
+      const { uri } = await FileSystem.downloadAsync(downloadUrl, fileUri, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!(await Sharing.isAvailableAsync())) {
+        Alert.alert("Không hỗ trợ", "Thiết bị không hỗ trợ mở file PDF");
+        return;
+      }
+
+      await Sharing.shareAsync(uri, {
+        mimeType: "application/pdf",
+        dialogTitle: "Xem / Tải hợp đồng",
+        UTI: "com.adobe.pdf",
+      });
+    } catch (e) {
+      console.error("❌ DOWNLOAD CONTRACT ERROR:", e);
+      Alert.alert("Lỗi", "Không thể tải hợp đồng");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) return <EVLoading />;
 
   if (!vehicle) {
@@ -132,62 +186,6 @@ export default function VehicleDetailScreen({ route, navigation }) {
       </SafeAreaView>
     );
   }
-
-  const downloadContractPdf = async () => {
-  try {
-    setLoading(true);
-
-
-    const memberRes = await getProfileMember();
-    const memberId = memberRes.data.memberId;
-
-    const contractRes = await getContractsByMember(memberId);
-    const contracts = contractRes.data.data || [];
-
-    const vehicleContract = contracts.find(
-      c =>
-        c.contractType === "VehicleRegistration" &&
-        c.contractStatuses === "Completed"
-    );
-
-    if (!vehicleContract) {
-      Alert.alert("Không tìm thấy hợp đồng");
-      return;
-    }
-
-    const contractId = vehicleContract.contractId;
-
-    const token = await getAccessToken();
-    const API_URL = Constants.expoConfig.extra.API_URL;
-    const fileName = `Hop-dong-${contractId}.pdf`;
-    const fileUri = FileSystem.documentDirectory + fileName;
-
-    const downloadUrl = `${API_URL}/contracts/${contractId}/pdf`;
-
-    const { uri } = await FileSystem.downloadAsync(downloadUrl, fileUri, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!(await Sharing.isAvailableAsync())) {
-      Alert.alert("Không hỗ trợ", "Thiết bị không hỗ trợ mở file PDF");
-      return;
-    }
-
-    await Sharing.shareAsync(uri, {
-      mimeType: "application/pdf",
-      dialogTitle: "Xem / Tải hợp đồng",
-      UTI: "com.adobe.pdf",
-    });
-  } catch (e) {
-    console.error("❌ DOWNLOAD CONTRACT ERROR:", e);
-    Alert.alert("Lỗi", "Không thể tải hợp đồng");
-  } finally {
-    setLoading(false);
-  }
-};
-
 
   return (
     <SafeAreaView style={styles.container}>
@@ -199,159 +197,205 @@ export default function VehicleDetailScreen({ route, navigation }) {
         <View style={{ width: 22 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {vehicle.images?.length > 0 ? (
-          <>
-            <FlatList
-              ref={flatListRef}
-              data={vehicle.images}
-              keyExtractor={(_, index) => index.toString()}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={(e) => {
-                const index = Math.round(e.nativeEvent.contentOffset.x / width);
-                setCurrentIndex(index);
-              }}
-              renderItem={({ item }) => (
-                <Image
-                  source={{ uri: item.secureUrl }}
-                  style={{ width, height: 220 }}
-                  resizeMode="cover"
-                />
-              )}
-            />
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "center",
-                marginTop: 8,
-              }}
-            >
-              {vehicle.images.map((_, index) => (
-                <View
-                  key={index}
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: index === currentIndex ? COLORS.primary : "#ccc",
-                    marginHorizontal: 4,
-                  }}
-                />
-              ))}
-            </View>
-          </>
-        ) : (
-          <View style={styles.noImagePlaceholder}>
-            <Text style={{ color: COLORS.gray, fontSize: 16 }}>Chưa có ảnh xe</Text>
-          </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+  {/* Phần ảnh xe */}
+  {vehicle.images?.length > 0 ? (
+    <>
+      <FlatList
+        ref={flatListRef}
+        data={vehicle.images}
+        keyExtractor={(_, index) => index.toString()}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={(e) => {
+          const index = Math.round(e.nativeEvent.contentOffset.x / width);
+          setCurrentIndex(index);
+        }}
+        renderItem={({ item }) => (
+          <Image
+            source={{ uri: item.secureUrl }}
+            style={{ width, height: 220 }}
+            resizeMode="cover"
+          />
         )}
+      />
 
-        <View style={styles.card}>
-          <Text style={styles.title}>
-            {vehicle.vehicleModel?.brandName} {vehicle.vehicleModel?.name}
-          </Text>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          marginTop: 8,
+        }}
+      >
+        {vehicle.images.map((_, index) => (
+          <View
+            key={index}
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: index === currentIndex ? COLORS.primary : "#ccc",
+              marginHorizontal: 4,
+            }}
+          />
+        ))}
+      </View>
+    </>
+  ) : (
+    <View style={styles.noImagePlaceholder}>
+      <Text style={{ color: COLORS.gray, fontSize: 16 }}>Chưa có ảnh xe</Text>
+    </View>
+  )}
 
-          <View style={{ marginTop: 8 }}>
-            <Text style={{ fontWeight: "600", color: COLORS.text }}>Trạng thái:</Text>
-            {renderStatus(vehicle.vehicleStatus)}
-          </View>
-
-          {vehicle.vehicleStatus === "SigningContract" && hasSignedLocally && (
-            <View style={{ marginTop: 16, alignItems: "center" }}>
-              <Text style={{ color: COLORS.signingGreen, fontWeight: "bold", fontSize: 16 }}>
-                Đã ký hợp đồng thành công
-              </Text>
-              <Text style={{ color: COLORS.gray, marginTop: 4 }}>
-                Đang chờ staff duyệt cuối cùng
-              </Text>
-            </View>
-          )}
-
-          {vehicle.vehicleStatus === "SaleEligible" && (
-  <TouchableOpacity
-    style={{
-      marginTop: 16,
-      backgroundColor: COLORS.signingGreen,
-      paddingVertical: 12,
-      borderRadius: 8,
-      alignItems: "center",
-    }}
-    onPress={downloadContractPdf}
-  >
-    <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
-      📄 Xem / Tải hợp đồng
+  {/* Card chính: Tên xe + Trạng thái + Nút hành động */}
+  <View style={styles.card}>
+    <Text style={styles.title}>
+      {vehicle.vehicleModel?.brandName} {vehicle.vehicleModel?.name}
     </Text>
-  </TouchableOpacity>
-)}
 
+    <View style={{ marginTop: 8 }}>
+      <Text style={{ fontWeight: "600", color: COLORS.text }}>Trạng thái:</Text>
+      {renderStatus(vehicle.vehicleStatus)}
+    </View>
 
-          {vehicle.vehicleStatus === "SigningContract" && !hasSignedLocally && (
-            <TouchableOpacity
-              style={{
-                marginTop: 16,
-                backgroundColor: "#2563eb",
-                paddingVertical: 12,
-                borderRadius: 8,
-                alignItems: "center",
-              }}
-              onPress={() => {
-                navigation.navigate("ContractScreen", { vehicleId });
-              }}
-            >
-              <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
-                Ký hợp đồng ngay →
-              </Text>
-            </TouchableOpacity>
-          )}
+    {vehicle.vehicleStatus === "SigningContract" && hasSignedLocally && (
+      <View style={{ marginTop: 16, alignItems: "center" }}>
+        <Text style={{ color: COLORS.signingGreen, fontWeight: "bold", fontSize: 16 }}>
+          Đã ký hợp đồng thành công
+        </Text>
+        <Text style={{ color: COLORS.gray, marginTop: 4 }}>
+          Đang chờ staff duyệt cuối cùng
+        </Text>
+      </View>
+    )}
 
-          {["Pending", "ReadyForInspection", "SigningContract", "Rejected"].includes(vehicle.vehicleStatus) && (
-            <TouchableOpacity
-              style={{
-                marginTop: 12,
-                backgroundColor: "#ef4444",
-                paddingVertical: 10,
-                borderRadius: 8,
-                alignItems: "center",
-              }}
-              onPress={handleDeleteVehicle}
-            >
-              <Text style={{ color: "white", fontWeight: "bold" }}>Hủy đăng ký xe</Text>
-            </TouchableOpacity>
-          )}
+    {vehicle.vehicleStatus === "SaleEligible" && (
+      <TouchableOpacity
+        style={{
+          marginTop: 16,
+          backgroundColor: COLORS.signingGreen,
+          paddingVertical: 12,
+          borderRadius: 8,
+          alignItems: "center",
+        }}
+        onPress={downloadContractPdf}
+      >
+        <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
+          📄 Xem / Tải hợp đồng
+        </Text>
+      </TouchableOpacity>
+    )}
 
-          {vehicle.vehicleStatus === "ReadyForInspection" && (
-            <Text style={{ marginTop: 12, color: "#f59e0b", fontStyle: "italic" }}>
-              Vui lòng đem xe ra station gần nhất để kiểm tra và duyệt.
-            </Text>
-          )}
-        </View>
+    {vehicle.vehicleStatus === "SigningContract" && !hasSignedLocally && (
+      <TouchableOpacity
+        style={{
+          marginTop: 16,
+          backgroundColor: "#2563eb",
+          paddingVertical: 12,
+          borderRadius: 8,
+          alignItems: "center",
+        }}
+        onPress={() => {
+          navigation.navigate("ContractScreen", { vehicleId });
+        }}
+      >
+        <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
+          Ký hợp đồng ngay →
+        </Text>
+      </TouchableOpacity>
+    )}
 
-        <View style={styles.card}>
-          <DetailRow label="Biển số" value={vehicle.licensePlate} />
-          <DetailRow label="Màu sắc" value={vehicle.color} />
-          <DetailRow label="Năm sản xuất" value={vehicle.year} />
-          <DetailRow label="Số km" value={`${vehicle.odometer} km`} />
-          <DetailRow
-            label="Dung lượng pin"
-            value={`${vehicle.vehicleModel?.batteryCapacity || "N/A"} kWh`}
-          />
-          <DetailRow
-            label="Tình trạng pin"
-            value={`${vehicle.batteryHealth || "N/A"}%`}
-          />
-          <DetailRow
-            label="Ngày bảo dưỡng"
-            value={
-              vehicle.lastMaintenanceDate
-                ? new Date(vehicle.lastMaintenanceDate).toLocaleDateString("vi-VN")
-                : "Chưa có"
-            }
-          />
-        </View>
-      </ScrollView>
+    {["Pending", "ReadyForInspection", "SigningContract", "Rejected"].includes(vehicle.vehicleStatus) && (
+      <TouchableOpacity
+        style={{
+          marginTop: 12,
+          backgroundColor: "#ef4444",
+          paddingVertical: 10,
+          borderRadius: 8,
+          alignItems: "center",
+        }}
+        onPress={handleDeleteVehicle}
+      >
+        <Text style={{ color: "white", fontWeight: "bold" }}>Hủy đăng ký xe</Text>
+      </TouchableOpacity>
+    )}
+
+    {vehicle.vehicleStatus === "ReadyForInspection" && (
+      <Text style={{ marginTop: 12, color: "#f59e0b", fontStyle: "italic" }}>
+        Vui lòng đem xe ra station gần nhất để kiểm tra và duyệt.
+      </Text>
+    )}
+  </View>
+
+  {/* Card thông tin cơ bản + Chi tiết dòng xe */}
+  <View style={styles.card}>
+    {/* Thông tin cơ bản */}
+    <DetailRow label="Biển số" value={vehicle.licensePlate} />
+    <DetailRow label="Màu sắc" value={vehicle.color} />
+    <DetailRow label="Năm sản xuất" value={vehicle.year} />
+    <DetailRow label="Số km" value={`${vehicle.odometer} km`} />
+    <DetailRow
+      label="Dung lượng pin"
+      value={`${vehicle.vehicleModel?.batteryCapacity || "N/A"} kWh`}
+    />
+    <DetailRow
+      label="Tình trạng pin"
+      value={`${vehicle.batteryHealth || "N/A"}%`}
+    />
+    <DetailRow
+      label="Ngày bảo dưỡng"
+      value={
+        vehicle.lastMaintenanceDate
+          ? new Date(vehicle.lastMaintenanceDate).toLocaleDateString("vi-VN")
+          : "Chưa có"
+      }
+    />
+
+    {/* === KHỐI CHI TIẾT DÒNG XE - ĐẶT NGAY DƯỚI THÔNG TIN CƠ BẢN === */}
+    {vehicle.vehicleModel && (
+      <View
+        style={{
+          marginTop: 20,  // khoảng cách với phần trên
+          paddingTop: 16,
+          borderTopWidth: 1,
+          borderTopColor: "#e0e0e0",
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 15,
+            fontWeight: "600",
+            color: COLORS.primary || "#007AFF",
+            marginBottom: 12,
+          }}
+        >
+          Chi tiết dòng xe
+        </Text>
+
+        <DetailRow label="Tên dòng xe" value={vehicle.vehicleModel.name} />
+        <DetailRow label="Hãng xe" value={vehicle.vehicleModel.vehicleBrand?.name} />
+        <DetailRow label="Hộp số" value={vehicle.vehicleModel.gearShiftType || "—"} />
+        <DetailRow
+          label="Quãng đường"
+          value={vehicle.vehicleModel.range ? `${vehicle.vehicleModel.range} km` : "—"}
+        />
+        <DetailRow
+          label="Dung lượng pin"
+          value={
+            vehicle.vehicleModel.batteryCapacity
+              ? `${vehicle.vehicleModel.batteryCapacity} kWh`
+              : "—"
+          }
+        />
+        <DetailRow
+          label="Số chỗ ngồi"
+          value={vehicle.vehicleModel.seatingCapacity || "—"}
+        />
+      </View>
+    )}
+  </View>
+</ScrollView>
     </SafeAreaView>
   );
 }
