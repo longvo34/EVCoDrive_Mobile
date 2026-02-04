@@ -63,55 +63,73 @@ export default function Step1BasicInfoScreen({ navigation }) {
   }, []);
 
   const fetchInitData = async () => {
-  try {
-    const profileRes = await getUserProfile();
-    
-    // Log toàn bộ response để xem chính xác
-    console.log("=== FULL PROFILE RESPONSE ===");
-    console.log("Status:", profileRes.status);
-    console.log("Data:", JSON.stringify(profileRes.data, null, 2));
-    console.log("Data keys:", Object.keys(profileRes.data || {}));
-    if (profileRes.data?.data) {
-      console.log("Nested data keys:", Object.keys(profileRes.data.data));
+    try {
+      const profileRes = await getUserProfile();
+
+      console.log("=== FULL PROFILE RESPONSE ===");
+      console.log("Status:", profileRes.status);
+      console.log("Data:", JSON.stringify(profileRes.data, null, 2));
+      console.log("Data keys:", Object.keys(profileRes.data || {}));
+      if (profileRes.data?.data) {
+        console.log("Nested data keys:", Object.keys(profileRes.data.data));
+      }
+
+      const possibleIds = [
+        profileRes.data?.id,
+        profileRes.data?.data?.id,
+        profileRes.data?.userId,
+        profileRes.data?.data?.userId,
+        profileRes.data?.memberId,
+        profileRes.data?.data?.memberId,
+      ];
+
+      const userId = possibleIds.find(id => id && typeof id === 'string' && id.trim() !== '');
+
+      console.log("Extracted userId (tìm thấy):", userId || "KHÔNG TÌM THẤY");
+
+      if (!userId) {
+        Alert.alert("Lỗi profile", "Không tìm thấy ID người dùng. Vui lòng kiểm tra đăng nhập.");
+        return;
+      }
+
+      const [brandRes, modelRes, stationRes] = await Promise.all([
+        getVehicleBrands(),
+        getVehicleModels(),
+        getRecommendedStations(userId),
+      ]);
+
+      setBrands(brandRes.data.data || []);
+      setModels(modelRes.data.data || []);
+      setStations(stationRes.data.data || []);
+
+    } catch (e) {
+      console.error("FETCH ERROR:", e.message);
+      if (e.response) {
+        console.error("API Error Response:", e.response.data);
+      }
+
+      if (e.response?.data?.errorCode === "SYS_5005") {
+        Alert.alert(
+          "Chưa cập nhật địa chỉ",
+          "Để hệ thống gợi ý trạm sạc gần bạn nhất, vui lòng cập nhật địa chỉ trong hồ sơ cá nhân trước khi đăng ký xe.",
+          [
+            { text: "Hủy", style: "cancel" },
+            {
+              text: "Cập nhật địa chỉ ngay",
+              onPress: () => {
+                navigation.navigate("ProfileDetail");
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert(
+          "Lỗi tải dữ liệu",
+          e.response?.data?.message || "Không thể tải dữ liệu ban đầu. Vui lòng kiểm tra kết nối và thử lại."
+        );
+      }
     }
-
-    // Thử lấy id từ nhiều vị trí có thể
-    const possibleIds = [
-      profileRes.data?.id,
-      profileRes.data?.data?.id,           // nếu response là { data: { id: ... } }
-      profileRes.data?.userId,
-      profileRes.data?.data?.userId,
-      profileRes.data?.memberId,
-      profileRes.data?.data?.memberId,
-    ];
-
-    const userId = possibleIds.find(id => id && typeof id === 'string' && id.trim() !== '');
-
-    console.log("Extracted userId (tìm thấy):", userId || "KHÔNG TÌM THẤY");
-
-    if (!userId) {
-      Alert.alert("Lỗi profile", "Không tìm thấy ID người dùng. Vui lòng kiểm tra đăng nhập.");
-      return; // dừng lại, không gọi API khác
-    }
-
-    const [brandRes, modelRes, stationRes] = await Promise.all([
-      getVehicleBrands(),
-      getVehicleModels(),
-      getRecommendedStations(userId),
-    ]);
-
-    setBrands(brandRes.data.data || []);
-    setModels(modelRes.data.data || []);
-    setStations(stationRes.data.data || []);
-
-  } catch (e) {
-    console.error("FETCH ERROR:", e.message);
-    if (e.response) {
-      console.error("API Error Response:", e.response.data);
-    }
-    Alert.alert("Lỗi", "Không tải được dữ liệu. Vui lòng thử lại sau.");
-  }
-};
+  };
 
   const filteredModels = form.vehicleBrand
     ? models.filter(
@@ -238,6 +256,51 @@ export default function Step1BasicInfoScreen({ navigation }) {
           }}
         />
 
+        {form.vehicleModel && (
+          <View
+            style={{
+              marginTop: 12,
+              marginHorizontal: 16,
+              padding: 16,
+              backgroundColor: "#f8f9fa",
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: "#e0e0e0",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: "600",
+                color: COLORS.primary || "#007AFF",
+                marginBottom: 12,
+              }}
+            >
+              Chi tiết dòng xe đã chọn
+            </Text>
+
+            <DetailRow label="Tên dòng xe" value={form.vehicleModel.name} />
+            <DetailRow label="Hãng xe" value={form.vehicleModel.vehicleBrand?.name} />
+            <DetailRow label="Hộp số" value={form.vehicleModel.gearShiftType} />
+            <DetailRow
+              label="Quãng đường"
+              value={form.vehicleModel.range ? `${form.vehicleModel.range} km` : "—"}
+            />
+            <DetailRow
+              label="Dung lượng pin"
+              value={
+                form.vehicleModel.batteryCapacity
+                  ? `${form.vehicleModel.batteryCapacity} kWh`
+                  : "—"
+              }
+            />
+            <DetailRow
+              label="Số chỗ ngồi"
+              value={form.vehicleModel.seatingCapacity || "—"}
+            />
+          </View>
+        )}
+
         <Label text="Trạm sạc đăng ký xe" />
         <DropdownInput
           value={
@@ -327,7 +390,6 @@ export default function Step1BasicInfoScreen({ navigation }) {
         <Text style={styles.nextText}>Tiếp tục →</Text>
       </TouchableOpacity>
 
-      {/* Modal chọn hãng xe */}
       <SelectModal
         visible={showBrandModal}
         data={brands}
@@ -343,7 +405,6 @@ export default function Step1BasicInfoScreen({ navigation }) {
         }}
       />
 
-      {/* Modal chọn dòng xe */}
       <SelectModal
         visible={showModelModal}
         data={filteredModels}
@@ -355,7 +416,6 @@ export default function Step1BasicInfoScreen({ navigation }) {
         }}
       />
 
-      {/* Modal chọn trạm sạc */}
       <SelectModal
         visible={showStationModal}
         data={stations}
@@ -514,6 +574,32 @@ function DropdownInput({ value, onPress, disabled }) {
       </Text>
       <Ionicons name="chevron-down" size={18} />
     </TouchableOpacity>
+  );
+}
+
+function DetailRow({ label, value }) {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginBottom: 8,
+        alignItems: "center",
+      }}
+    >
+      <Text style={{ color: COLORS.gray, fontSize: 14, flex: 1 }}>{label}:</Text>
+      <Text
+        style={{
+          fontSize: 14,
+          fontWeight: "500",
+          color: COLORS.black,
+          textAlign: "right",
+          flex: 1,
+        }}
+      >
+        {value || "—"}
+      </Text>
+    </View>
   );
 }
 
