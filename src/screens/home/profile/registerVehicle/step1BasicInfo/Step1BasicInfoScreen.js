@@ -53,10 +53,10 @@ export default function Step1BasicInfoScreen({ navigation }) {
   });
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from(
-    { length: currentYear - 1970 + 1 },
-    (_, i) => currentYear - i
-  );
+const years = Array.from(
+  { length: currentYear - 2006 + 1 },
+  (_, i) => currentYear - i
+);
 
   useEffect(() => {
     fetchInitData();
@@ -301,12 +301,12 @@ export default function Step1BasicInfoScreen({ navigation }) {
           </View>
         )}
 
-        <Label text="Trạm sạc đăng ký xe" />
+        <Label text="Trạm xe" />
         <DropdownInput
           value={
             form.station
               ? `${form.station.name} • ${form.station.distanceKm || "?"} km`
-              : "Chọn trạm sạc"
+              : "Chọn trạm xe"
           }
           onPress={() => setShowStationModal(true)}
         />
@@ -416,16 +416,15 @@ export default function Step1BasicInfoScreen({ navigation }) {
         }}
       />
 
-      <SelectModal
-        visible={showStationModal}
-        data={stations}
-        labelKey="name"
-        onClose={() => setShowStationModal(false)}
-        onSelect={(item) => {
-          setForm({ ...form, station: item });
-          setShowStationModal(false);
-        }}
-      />
+      <StationSelectModal
+  visible={showStationModal}
+  data={stations}
+  onClose={() => setShowStationModal(false)}
+  onSelect={(item) => {
+    setForm({ ...form, station: item });
+    setShowStationModal(false);
+  }}
+/>
 
       {showYearPicker && (
         <TouchableOpacity
@@ -635,6 +634,59 @@ function SelectModal({ visible, data, labelKey, onSelect, onClose }) {
                 }}
               >
                 <Text>{item[labelKey]}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+function StationSelectModal({ visible, data, onSelect, onClose }) {
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <Pressable
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.3)",
+          justifyContent: "center",
+          padding: 24,
+        }}
+        onPress={onClose}
+      >
+        <Pressable
+          style={{
+            backgroundColor: COLORS.white,
+            borderRadius: 16,
+            maxHeight: "70%",
+          }}
+          onPress={() => {}}
+        >
+          <ScrollView>
+            {data.map((item) => (
+              <TouchableOpacity
+                key={item.stationId || item.name + Math.random()}
+                onPress={() => onSelect(item)}
+                style={{
+                  padding: 14,
+                  borderBottomWidth: 0.5,
+                  borderColor: "#eee",
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ flex: 1 }}>{item.name}</Text>
+                {item.distanceKm != null && item.distanceKm !== "" ? (
+                  <Text style={{ color: COLORS.gray, fontSize: 13 }}>
+                    {item.distanceKm} km
+                  </Text>
+                ) : (
+                  <Text style={{ color: COLORS.gray, fontSize: 13 }}>
+                    Gần bạn
+                  </Text>
+                )}
               </TouchableOpacity>
             ))}
           </ScrollView>
