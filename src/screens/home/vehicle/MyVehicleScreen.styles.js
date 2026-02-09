@@ -1,30 +1,41 @@
 import { StyleSheet } from "react-native";
+import COLORS from "../../../constants/colors";
 
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: COLORS.background || "#f8fafc", 
     paddingHorizontal: 16,
     paddingTop: 20,
   },
 
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "700",
-    color: "#000",
+    color: COLORS.text || "#111827",
+    marginBottom: 8,
+    letterSpacing: -0.5,
   },
 
   subTitle: {
-    fontSize: 14,
-    color: "#777",
-    marginBottom: 16,
+    fontSize: 15,
+    color: COLORS.gray || "#6b7280",
+    marginBottom: 24,
   },
 
   card: {
-    backgroundColor: "#FFF",
-    borderRadius: 20,
-    marginBottom: 16,
+    backgroundColor: "#ffffff",
+    borderRadius: 24,
+    marginBottom: 20,
     overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.04)",
+    transform: [{ scale: 1 }],
   },
 
   image: {
@@ -34,46 +45,84 @@ export default StyleSheet.create({
   },
 
   info: {
-    padding: 14,
+    padding: 20,
   },
 
   name: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 4,
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLORS.text || "#111827",
+    marginBottom: 6,
+    letterSpacing: -0.2,
   },
 
   plate: {
-    fontSize: 13,
-    color: "#777",
-    marginBottom: 8,
+    fontSize: 14,
+    color: COLORS.gray || "#6b7280",
+    marginBottom: 10,
+    fontWeight: "500",
+  },
+
+  share: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: COLORS.primary || "#10b981",
+    marginBottom: 6,
+  },
+
+  price: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1f2937",
+    marginBottom: 16,
   },
 
   badge: {
     alignSelf: "flex-start",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
     borderRadius: 20,
   },
 
-  badgeGreen: {
-    backgroundColor: "#E7F8EF",
+  badgePublished: {
+    backgroundColor: "#ecfdf5", 
   },
 
-  badgeOrange: {
-    backgroundColor: "#FFF2E5",
+  badgePartial: { 
+    backgroundColor: "#fffbeb", 
+  },
+
+  badgeRejected: {
+    backgroundColor: "#fef2f2", 
+  },
+
+  badgeCompleted: {
+    backgroundColor: "#ecfdf5",
   },
 
   badgeText: {
-    fontSize: 12,
-    fontWeight: "500",
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: -0.1,
   },
 
-  textGreen: {
-    color: "#1BAA6E",
+  textPublished: {
+    color: "#065f46", 
   },
 
-  textOrange: {
-    color: "#F59E0B",
+  textPending: {
+    color: "#92400e", 
   },
+
+  textRejected: {
+    color: "#991b1b", 
+  },
+
+  expiredDate: {
+  fontSize: 13,
+  color: "#6b7280",          
+  marginBottom: 8,
+  fontWeight: "500",
+},
+
 });

@@ -74,12 +74,17 @@ const isValid = rawPrice > 0 && percent >= 10;
 
     await createSellRequest(payload);
 
-    Alert.alert("Thành công", "Đăng bán thành công!");
-    navigation.goBack();
+    Alert.alert("Thành công", "Đăng bán thành công!", [
+      {
+        text: "OK",
+        onPress: () => {
+          navigation.getParent()?.navigate("Vehicle");
+        },
+      },
+    ]);
 
   } catch (error) {
     const apiError = error.response?.data;
-
     console.log("API ERROR:", apiError);
 
     if (apiError?.errorCode === "VAL_3003") {
@@ -90,16 +95,11 @@ const isValid = rawPrice > 0 && percent >= 10;
         setPercent(available * 10);
       }
 
-      Alert.alert(
-        "Không đủ cổ phần",
-        `Bạn chỉ còn ${available} cổ phần để bán.`
-      );
+      Alert.alert("Không đủ cổ phần", `Bạn chỉ còn ${available} cổ phần để bán.`);
       return;
     }
-    Alert.alert(
-      "Lỗi",
-      apiError?.message || "Không thể tạo yêu cầu bán"
-    );
+
+    Alert.alert("Lỗi", apiError?.message || "Không thể tạo yêu cầu bán");
 
   } finally {
     setLoading(false);

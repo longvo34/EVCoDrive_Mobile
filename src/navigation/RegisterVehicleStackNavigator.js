@@ -25,6 +25,7 @@ export default function RegisterVehicleStackNavigator() {
       />
       <Stack.Screen name="ContractScreen" component={ContractScreen} />
       <Stack.Screen name="SellRequest" component={SellRequestScreen} />
+     
     </Stack.Navigator>
   );
 }

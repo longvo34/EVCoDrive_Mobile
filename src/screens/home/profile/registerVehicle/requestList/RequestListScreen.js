@@ -163,20 +163,33 @@ export default function RequestListScreen({ navigation }) {
       )}
 
       {/* Nút "Đăng bán ngay" chỉ hiện khi SaleEligible */}
-      {item.vehicleStatus === "SaleEligible" && (
-        <TouchableOpacity
-          style={styles.sellNowButton}
-          onPress={() => {
-            navigation.navigate("RegisterVehicle", {
-              screen: "SellRequest",
-              params: { vehicleId: item.vehicleId },
-            });
-          }}
-        >
-          <Text style={styles.sellNowText}>Đăng bán ngay</Text>
-        </TouchableOpacity>
-      )}
+    
+{item.vehicleStatus === "SaleEligible" && (
+  <View style={styles.actionRow}>
+
+    {/* Nút Đăng bán ngay */}
+    <TouchableOpacity
+      style={styles.sellNowButton}
+      onPress={() => {
+        navigation.navigate("RegisterVehicle", {
+          screen: "SellRequest",
+          params: { vehicleId: item.vehicleId },
+        });
+      }}
+    >
+      <Text style={styles.sellNowText}>Đăng bán ngay</Text>
     </TouchableOpacity>
+
+   
+
+  </View>
+)}
+
+
+      
+    </TouchableOpacity>
+
+    
   );
 
   const renderEmpty = () => (
