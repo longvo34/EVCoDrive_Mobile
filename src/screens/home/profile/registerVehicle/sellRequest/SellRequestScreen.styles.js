@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native";
 import COLORS from "../../../../../constants/colors";
-// ⬆️ chỉnh path nếu khác
 
 export default StyleSheet.create({
   container: {
@@ -31,6 +30,11 @@ export default StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   vehicleRow: {
     flexDirection: "row",
@@ -51,6 +55,7 @@ export default StyleSheet.create({
   vehicleSub: {
     fontSize: 12,
     color: COLORS.gray,
+    marginTop: 2,
   },
 
   suggestBtn: {
@@ -62,6 +67,11 @@ export default StyleSheet.create({
     borderRadius: 999,
     marginBottom: 16,
     gap: 6,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   suggestText: {
     fontWeight: "700",
@@ -72,61 +82,26 @@ export default StyleSheet.create({
   card: {
     backgroundColor: COLORS.background,
     borderRadius: 12,
-    padding: 14,
+    padding: 16,
     marginBottom: 16,
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
   cardTitle: {
-    fontWeight: "600",
+    fontWeight: "700",
+    fontSize: 18,
     color: COLORS.text,
+    marginTop: 8,
+    marginBottom: 4,
   },
   cardSub: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.primary,
-  },
-
-  sliderTrack: {
-    height: 4,
-    backgroundColor: COLORS.gray,
-    borderRadius: 2,
-    position: "relative",
-    marginVertical: 12,
-  },
-  sliderActive: {
-    height: 4,
-    backgroundColor: COLORS.primary,
-    borderRadius: 2,
-  },
-  sliderDot: {
-    position: "absolute",
-    top: -6,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: COLORS.primary,
-  },
-  sliderLabelRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  sliderLabel: {
-    fontSize: 11,
-    color: COLORS.gray,
-  },
-  sliderNote: {
-    fontSize: 11,
-    color: COLORS.gray,
-    marginTop: 8,
+    fontWeight: "600",
   },
 
   inputLabel: {
     fontSize: 13,
-    marginBottom: 6,
-    fontWeight: "500",
+    marginBottom: 8,
+    fontWeight: "600",
     color: COLORS.text,
   },
   inputRow: {
@@ -142,48 +117,83 @@ export default StyleSheet.create({
     flex: 1,
     height: 44,
     color: COLORS.text,
+    fontSize: 14,
   },
   currency: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.gray,
+    fontWeight: "600",
   },
 
   infoBox: {
     flexDirection: "row",
     gap: 8,
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFF9E6",
     padding: 12,
     borderRadius: 12,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#FFE082",
   },
   infoText: {
     fontSize: 12,
     color: COLORS.text,
     flex: 1,
+    lineHeight: 18,
   },
 
   dateRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    backgroundColor: COLORS.white,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.gray,
   },
   dateText: {
     fontSize: 13,
-    color: COLORS.gray,
+    color: COLORS.text,
+    fontWeight: "500",
   },
 
+  // Nút Đăng bán - Active
+  submitBtn: {
+    position: "absolute",
+    bottom: 20,
+    left: 16,
+    right: 16,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  submitText: {
+    color: COLORS.black,
+    fontWeight: "700",
+    fontSize: 16,
+  },
+
+  // Nút Đăng bán - Disabled
   submitBtnDisabled: {
     position: "absolute",
     bottom: 20,
     left: 16,
     right: 16,
-    backgroundColor: COLORS.gray,
-    paddingVertical: 14,
-    borderRadius: 999,
+    backgroundColor: "#E0E0E0",
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: "center",
   },
   submitTextDisabled: {
-    color: COLORS.white,
+    color: "#9E9E9E",
     fontWeight: "600",
+    fontSize: 16,
   },
 });

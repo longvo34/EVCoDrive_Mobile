@@ -108,7 +108,7 @@ export default function RequestListScreen({ navigation }) {
         break;
       case "SaleEligible":
         text = "Đã duyệt";
-        color = COLORS.signingGreen; // hoặc "#059669" nếu bạn muốn xanh lá đậm
+        color = COLORS.signingGreen; 
         break;
       case "Rejected":
         text = "Từ chối";
