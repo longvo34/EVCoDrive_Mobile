@@ -143,12 +143,11 @@ emptyDesc: {
 },
 
 sellNowButton: {
-  marginTop: 12,
-  backgroundColor: COLORS.primary, 
-  paddingVertical: 10,
-  paddingHorizontal: 20,
-  borderRadius: 999, 
-  alignSelf: "flex-start",
+  flex: 1,
+  backgroundColor: COLORS.primary,
+  paddingVertical: 12,
+  borderRadius: 999,
+  alignItems: "center",
   elevation: 2,
   shadowColor: "#000",
   shadowOffset: { width: 0, height: 2 },
@@ -161,6 +160,12 @@ sellNowText: {
   fontSize: 14,
   fontWeight: "700",
   textAlign: "center",
+},
+
+actionRow: {
+  flexDirection: "row",
+  marginTop: 12,
+  gap: 10, 
 },
 
 });

@@ -1,25 +1,8 @@
 import LottieView from "lottie-react-native";
-import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import COLORS from "../../constants/colors";
 
-const MIN_LOADING_TIME = 600; 
-
-export default function EVLoading() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    let timer;
-
-    setVisible(true);
-
-    timer = setTimeout(() => {
-      setVisible(false);
-    }, MIN_LOADING_TIME);
-
-    return () => clearTimeout(timer);
-  }, []);
-
+export default function EVLoading({ visible }) {
   if (!visible) return null;
 
   return (
