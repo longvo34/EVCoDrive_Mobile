@@ -169,7 +169,7 @@ export default function MyVehicleScreen() {
       activeOpacity={0.88}
       onPress={() =>
         navigation.navigate("SellRequestDetail", {
-          sellRequestId: item.sellRequestId,
+          sellRequest: item,
         })
       }
     >

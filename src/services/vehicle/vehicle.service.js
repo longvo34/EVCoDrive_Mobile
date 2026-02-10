@@ -78,3 +78,7 @@ export const updateVehicleStatus = (vehicleId, status) => {
     }
   );
 };
+
+export const getAvailableSharesByVehicleId = (vehicleId) => {
+  return api.get(`/vehicles/${vehicleId}/available-shares`);
+};
