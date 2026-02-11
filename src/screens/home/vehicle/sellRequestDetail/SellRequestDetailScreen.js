@@ -3,13 +3,13 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import EVLoading from "../../../../components/animation/EVLoading";
 import COLORS from "../../../../constants/colors";
@@ -22,11 +22,16 @@ export default function SellRequestDetailScreen() {
   const { sellRequest } = route.params || {};
 
   const [showDatePicker, setShowDatePicker] = useState(false);
-const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  const formatCurrency = (value) => {
+    if (!value) return "";
+    return value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
 
   const [modalVisible, setModalVisible] = useState(false);
   const [newPrice, setNewPrice] = useState(
-    sellRequest?.pricePerShare?.toString() || ""
+    formatCurrency(sellRequest?.pricePerShare ? String(sellRequest.pricePerShare) : "")
   );
   const [newExpiredDate, setNewExpiredDate] = useState(
     sellRequest?.expiredDate
@@ -93,27 +98,39 @@ const [showTimePicker, setShowTimePicker] = useState(false);
   };
 
   const handleUpdate = async () => {
-    const priceNum = Number(newPrice);
+    const priceNum = Number(newPrice.replace(/\./g, ""));
     if (!newPrice || isNaN(priceNum) || priceNum <= 0) {
       Alert.alert("Lỗi", "Vui lòng nhập giá hợp lệ (số lớn hơn 0)");
       return;
     }
 
-    let isoExpiredDate = undefined;
-    if (newExpiredDate) {
-      const dateObj = new Date(newExpiredDate);
-      if (!isNaN(dateObj.getTime())) {
-        isoExpiredDate = dateObj.toISOString();
-      } else {
-        Alert.alert("Lỗi", "Định dạng ngày hết hạn không hợp lệ");
-        return;
-      }
-    }
+   let isoExpiredDate = undefined;
+  if (newExpiredDate) {
+    const newDateObj = new Date(newExpiredDate);
+    if (!isNaN(newDateObj.getTime())) {
+      isoExpiredDate = newDateObj.toISOString();
 
-    const payload = {
-      pricePerShare: priceNum,
-      ...(isoExpiredDate && { expiredDate: isoExpiredDate }),
-    };
+     
+      if (sellRequest.expiredDate) {
+        const oldDate = new Date(sellRequest.expiredDate);
+        if (newDateObj <= oldDate) {
+          Alert.alert(
+            "Không thể cập nhật",
+            "Bạn chỉ có thể chọn ngày hết hạn **lớn hơn** ngày hiện tại.\nVui lòng chọn lại thời gian hợp lệ."
+          );
+          return; 
+        }
+      }
+    } else {
+      Alert.alert("Lỗi", "Định dạng ngày hết hạn không hợp lệ");
+      return;
+    }
+  }
+
+  const payload = {
+    pricePerShare: priceNum,
+    ...(isoExpiredDate && { expiredDate: isoExpiredDate }),
+  };
 
     console.log("Payload gửi đi:", JSON.stringify(payload, null, 2));
     console.log("ID:", sellRequest.sellRequestId);
@@ -316,21 +333,35 @@ const [showTimePicker, setShowTimePicker] = useState(false);
 
       {/* Giá mỗi phần */}
       <View>
-        <Text style={styles.label}>Giá mỗi phần (₫)</Text>
-        <TextInput
+        <Text style={styles.label}>Giá mỗi phần</Text>
+        <View
           style={{
+            flexDirection: "row",
+            alignItems: "center",
             borderWidth: 1,
             borderColor: "#d1d5db",
             borderRadius: 8,
-            padding: 12,
-            fontSize: 16,
             marginTop: 6,
+            paddingRight: 12,
           }}
-          value={newPrice}
-          onChangeText={setNewPrice}
-          keyboardType="numeric"
-          placeholder="Ví dụ: 500000"
-        />
+        >
+          <TextInput
+            style={{
+              flex: 1,
+              padding: 12,
+              fontSize: 16,
+            }}
+            value={newPrice}
+            onChangeText={(text) => {
+              const rawNumber = text.replace(/\D/g, "");
+              const formatted = formatCurrency(rawNumber);
+              setNewPrice(formatted);
+            }}
+            keyboardType="numeric"
+            placeholder="Nhập giá tiền"
+          />
+          <Text style={{ fontSize: 16, fontWeight: "500" }}>VND</Text>
+        </View>
       </View>
 
       

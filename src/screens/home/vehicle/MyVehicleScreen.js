@@ -58,25 +58,52 @@ export default function MyVehicleScreen() {
   }, [navigation]);
 
   const fetchData = async () => {
-    try {
-      setLoading(true);
-      const res = await getMySellRequests(); 
-      const rawData = res.data?.data || [];
-      const sorted = [...rawData].sort((a, b) => {
-        const priA = STATUS_ORDER.indexOf(a.status);
-        const priB = STATUS_ORDER.indexOf(b.status);
-        if (priA !== priB) return priA - priB;
-        return new Date(b.createdDate) - new Date(a.createdDate);
-      });
+  try {
+    setLoading(true);
 
-      setData(sorted);
-      setFilteredData(sorted);
-    } catch (error) {
-      console.error("Lỗi fetch yêu cầu bán:", error.response?.data || error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const res = await getMySellRequests();
+
+    console.log("Full response:", res);
+    console.log("res.data:", res?.data);
+    console.log("res.data.data:", res?.data?.data);
+    console.log("res.data.data.items:", res?.data?.data?.items);
+    console.log(
+      "Is items array:",
+      Array.isArray(res?.data?.data?.items)
+    );
+
+    const rawData = res?.data?.data?.items || [];
+
+    console.log("rawData:", rawData);
+    console.log("Is rawData array:", Array.isArray(rawData));
+
+    console.log("STATUS_ORDER:", STATUS_ORDER);
+    console.log("Is STATUS_ORDER array:", Array.isArray(STATUS_ORDER));
+
+    const sorted = Array.isArray(rawData)
+      ? [...rawData].sort((a, b) => {
+          const priA = STATUS_ORDER?.indexOf?.(a.status) ?? 999;
+          const priB = STATUS_ORDER?.indexOf?.(b.status) ?? 999;
+
+          if (priA !== priB) return priA - priB;
+
+          return (
+            new Date(b.createdDate).getTime() -
+            new Date(a.createdDate).getTime()
+          );
+        })
+      : [];
+
+    setData(sorted);
+    setFilteredData(sorted);
+  } catch (error) {
+    console.error("Lỗi fetch yêu cầu bán:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const onRefresh = async () => {
     setRefreshing(true);
