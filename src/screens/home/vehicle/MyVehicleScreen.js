@@ -58,9 +58,10 @@ export default function MyVehicleScreen() {
   }, [navigation]);
 
   const fetchData = async () => {
+    console.log("🔥 fetchData CALLED");
   try {
     setLoading(true);
-
+    console.log("🚀 Calling getMySellRequests...");
     const res = await getMySellRequests();
 
     console.log("Full response:", res);
@@ -96,9 +97,40 @@ export default function MyVehicleScreen() {
 
     setData(sorted);
     setFilteredData(sorted);
-  } catch (error) {
-    console.error("Lỗi fetch yêu cầu bán:", error);
-  } finally {
+  }  catch (error) {
+  console.log("=========== AXIOS ERROR START ===========");
+
+  // URL + method
+  console.log("FULL URL:", error.config?.baseURL + error.config?.url);
+  console.log("METHOD:", error.config?.method);
+
+  // Header gửi lên
+  console.log("REQUEST HEADERS:", error.config?.headers);
+
+  // Param nếu có
+  console.log("REQUEST PARAMS:", error.config?.params);
+
+  // Body nếu có
+  console.log("RA:", error.config?.data);
+
+  // Status
+  console.log("STATUS:", error.response?.status);
+
+  // Data backend trả về (quan trọng nhất)
+  console.log(
+    "RESPONSE DATA:",
+    JSON.stringify(error.response?.data, null, 2)
+  );
+
+  // Error code nếu backend có
+  console.log("ERROR CODE:", error.response?.data?.errorCode);
+  console.log("MESSAGE:", error.response?.data?.message);
+
+  console.log("=========== AXIOS ERROR END ===========");
+
+  console.error("Lỗi fetch yêu cầu bán:", error);
+}
+finally {
     setLoading(false);
   }
 };

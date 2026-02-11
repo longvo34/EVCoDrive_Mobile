@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import COLORS from "../constants/colors";
 import HistoryScreen from "../screens/home/history/HistoryScreen";
-import HomeScreen from "../screens/home/home/HomeScreen";
+import HomeStackNavigator from "./HomeStackNavigator";
 import VehicleStackNavigator from "./VehicleStackNavigator";
 
 import ProfileStack from "./ProfileStackNavigator";
@@ -39,7 +39,19 @@ export default function MainNavigator({ setIsLoggedIn }) {
           tabBarStyle: { backgroundColor: "#ffffff" },
         })}
       >
-        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen
+  name="Home"
+  component={HomeStackNavigator}
+  listeners={({ navigation }) => ({
+    tabPress: () => {
+      navigation.navigate("Home", {
+        screen: "HomeMain",
+      });
+    },
+  })}
+/>
+
+
         <Tab.Screen name="Vehicle" component={VehicleStackNavigator} />
 
         <Tab.Screen name="History" component={HistoryScreen} />
