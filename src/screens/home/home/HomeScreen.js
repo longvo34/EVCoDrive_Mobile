@@ -1,3 +1,4 @@
+import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -6,62 +7,76 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getMyProfile } from "../../../services/auth/auth.service";
+import { getGroupsWithAvailableShares } from "../../../services/coOwnerGroup/coOwnerGroup.service";
+import { getVehicleById } from "../../../services/vehicle/vehicle.service";
 import styles from "./HomeScreen.styles";
 
-const CARS = [
-  {
-    id: "1",
-    name: "Vinfast VF7",
-    image: "https://i.imgur.com/Zl0ZK2M.png",
-  },
-  {
-    id: "2",
-    name: "Vinfast VF8",
-    image: "https://i.imgur.com/Zl0ZK2M.png",
-  },
-  {
-    id: "3",
-    name: "Vinfast VF9",
-    image: "https://i.imgur.com/Zl0ZK2M.png",
-  },
-  {
-    id: "4",
-    name: "Vinfast VF6",
-    image: "https://i.imgur.com/Zl0ZK2M.png",
-  },
-];
 
 export default function HomeScreen() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [groups, setGroups] = useState([]);
+  const navigation = useNavigation();
+
 
   useEffect(() => {
-    console.log("👉👉👉 HOME SCREEN MOUNTED");
-
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
-        const res = await getMyProfile();
+        setLoading(true);
 
-        console.log("PROFILE RESPONSE:", res.data);
+        // 1️⃣ Lấy profile
+        const profileRes = await getMyProfile();
 
-        if (!res.data?.isSuccess) {
-          throw new Error(res.data?.message || "Get profile failed");
+        if (!profileRes.data?.isSuccess) {
+          throw new Error(profileRes.data?.message || "Get profile failed");
         }
 
-        setUser(res.data.data);
+        setUser(profileRes.data.data);
+
+        // 2️⃣ Lấy danh sách group có share bán
+        const groupRes = await getGroupsWithAvailableShares();
+
+        if (!groupRes.data?.isSuccess) {
+          throw new Error(groupRes.data?.message || "Get groups failed");
+        }
+
+        const groupsData = groupRes.data.data;
+
+        // 3️⃣ Gọi song song API vehicle để lấy ảnh
+        const groupsWithImages = await Promise.all(
+          groupsData.map(async (group) => {
+            try {
+              const vehicleRes = await getVehicleById(group.vehicleId);
+              const vehicle = vehicleRes.data.data;
+
+              return {
+                ...group,
+                imageUrl:
+                  vehicle.images?.[0]?.secureUrl || null,
+              };
+            } catch (err) {
+              return {
+                ...group,
+                imageUrl: null,
+              };
+            }
+          })
+        );
+
+        setGroups(groupsWithImages);
       } catch (err) {
-        console.log("PROFILE ERROR:", err);
-        Alert.alert("Lỗi", "Không tải được thông tin người dùng");
+        console.log("HOME ERROR:", err);
+        Alert.alert("Lỗi", "Không tải được dữ liệu");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
+    fetchData();
   }, []);
 
   if (loading) {
@@ -81,15 +96,15 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.userRow}>
-         <Image
-  source={{
-    uri:
-      user?.avatarUrl && user.avatarUrl.trim() !== ""
-        ? user.avatarUrl
-        : "https://www.gravatar.com/avatar/?d=mp&s=200",
-  }}
-  style={styles.avatar}
-/>
+          <Image
+            source={{
+              uri:
+                user?.avatarUrl && user.avatarUrl.trim() !== ""
+                  ? user.avatarUrl
+                  : "https://www.gravatar.com/avatar/?d=mp&s=200",
+            }}
+            style={styles.avatar}
+          />
           <View>
             <Text style={styles.hello}>Xin chào</Text>
             <Text style={styles.username}>
@@ -97,34 +112,78 @@ export default function HomeScreen() {
             </Text>
           </View>
         </View>
-
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconCircle}>
-            <Text>🔍</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconCircle}>
-            <Text>⚙️</Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* Content */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.welcome}>Chào mừng!</Text>
-        <Text style={styles.subtitle}>Chọn mẫu xe bạn muốn</Text>
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.welcome}>Marketplace</Text>
+        <Text style={styles.subtitle}>
+          Các xe đang có cổ phần bán
+        </Text>
 
-        {/* Car slider */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {CARS.map((car) => (
-            <View key={car.id} style={styles.carCard}>
-              <Image source={{ uri: car.image }} style={styles.carImage} />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
+          {groups.map((group) => (
+            <TouchableOpacity
+  key={group.coOwnerGroupId}
+  style={styles.carCard}
+  activeOpacity={0.8}
+  onPress={() =>
+    navigation.navigate("GroupShare", {
+      groupId: group.coOwnerGroupId,
+      vehicleId: group.vehicleId,
+    })
+  }
+>
+
+              <Image
+                source={{
+                  uri:
+                    group.imageUrl ||
+                    "https://picsum.photos/300/200",
+                }}
+                style={styles.carImage}
+              />
+
               <View style={styles.carFooter}>
-                <Text style={styles.carName}>{car.name}</Text>
+                <View>
+                  <Text style={styles.carName}>
+                    {group.vehicleBrand}{" "}
+                    {group.vehicleModel}
+                  </Text>
+
+                  <Text style={{ fontSize: 12 }}>
+                    Biển số: {group.licensePlate}
+                  </Text>
+
+                  <Text style={{ fontSize: 12 }}>
+                    Đang bán:{" "}
+                    {group.totalSharesForSale} share
+                  </Text>
+
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Giá từ:{" "}
+                    {group.lowestPricePerShare?.toLocaleString()}{" "}
+                    VND
+                  </Text>
+                </View>
+
                 <View style={styles.arrowCircle}>
                   <Text style={styles.arrow}>↗</Text>
                 </View>
               </View>
-            </View>
+           </TouchableOpacity>
+
           ))}
         </ScrollView>
 

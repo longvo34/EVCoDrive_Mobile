@@ -5,6 +5,7 @@ export const createSellRequest = (data) => {
 };
 
 export const getMySellRequests = () => {
+  console.log("📡 API getMySellRequests HIT");
   return api.get("/sellrequests/my-requests");
 };
 
