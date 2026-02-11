@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect } from "react";
 import { Alert, Image } from "react-native";
 import EVLoading from "../../../../../components/animation/EVLoading";
+import { suggestPrice } from "../../../../../services/priceSuggestion/priceSuggestion.service";
 import { createSellRequest } from "../../../../../services/sellRequest/sellRequest.service";
 import { getVehicleById } from "../../../../../services/vehicle/vehicle.service";
 import styles from "./SellRequestScreen.styles";
@@ -29,26 +30,35 @@ export default function SellRequestScreen({ navigation, route }) {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const { vehicleId } = route.params;
   const [vehicle, setVehicle] = useState(null);
+  const [explanation, setExplanation] = useState("");
+
 
   useEffect(() => {
     fetchVehicleDetail();
   }, []);
 
   const fetchVehicleDetail = async () => {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const res = await getVehicleById(vehicleId);
+    const res = await getVehicleById(vehicleId);
 
-      const vehicleData = res.data?.data || res.data;
-      setVehicle(vehicleData);
+    console.log("FULL RESPONSE:", res);
+    console.log("RESPONSE DATA:", res.data);
 
-    } catch (error) {
-      console.log("Lỗi lấy chi tiết xe:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const vehicleData = res.data?.data || res.data;
+
+    console.log("Vehicle detail parsed:", vehicleData);
+
+    setVehicle(vehicleData);
+
+  } catch (error) {
+    console.log("Lỗi lấy chi tiết xe:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const showLoading = () => {
     setLoading(true);
@@ -114,6 +124,62 @@ const isValid = rawPrice > 0 && percent >= 10;
     .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 };
 
+const handleSuggestPrice = async () => {
+  try {
+    if (!vehicle) {
+      Alert.alert("Lỗi", "Chưa tải xong thông tin xe");
+      return;
+    }
+
+    setLoading(true);
+
+    const body = {
+      carInfo: {
+        model: vehicle.vehicleModel?.name || "",
+        brand: vehicle.vehicleModel?.brandName || "", 
+        year: vehicle.year,
+        odometer: vehicle.odometer,
+        batteryHealth: vehicle.batteryHealth,
+        location: vehicle.currentStation?.address || "", 
+      },
+      fraction: percent / 10,
+      daysPerYear: 30,
+      kmLimitPerYear: 2000,
+    };
+
+    console.log("Body gửi AI:", body);
+
+   const res = await suggestPrice(body);
+
+console.log("RAW RESPONSE:", res);
+console.log("RES.DATA:", res.data);
+
+const responseData = res.data?.data || res.data;
+
+console.log("PARSED DATA:", responseData);
+
+const suggestedPrice = responseData?.suggestedPrice;
+const explanationText = responseData?.explanation;
+
+if (suggestedPrice) {
+  const formatted = formatCurrency(String(suggestedPrice));
+  setPrice(formatted);
+}
+
+if (explanationText) {
+  setExplanation(explanationText);
+}
+
+  } catch (error) {
+    console.log("Suggest price error:", error.response?.data);
+    Alert.alert("Lỗi", "Không thể gợi ý giá lúc này");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
   return (
     <SafeAreaView style={styles.container}>
       {loading && <EVLoading />}
@@ -160,11 +226,18 @@ const isValid = rawPrice > 0 && percent >= 10;
         {/* SUGGEST PRICE */}
         <TouchableOpacity
           style={styles.suggestBtn}
-          onPress={showLoading}
+          onPress={handleSuggestPrice}
         >
           <Ionicons name="sparkles-outline" size={16} />
           <Text style={styles.suggestText}>GỢI Ý GIÁ BÁN TỐI ƯU</Text>
         </TouchableOpacity>
+
+        {explanation ? (
+  <View style={styles.aiBox}>
+    <Ionicons name="information-circle-outline" size={16} color="#555" />
+    <Text style={styles.aiText}>{explanation}</Text>
+  </View>
+) : null}
 
         {/* SHARE SLIDER */}
         <View style={styles.card}>

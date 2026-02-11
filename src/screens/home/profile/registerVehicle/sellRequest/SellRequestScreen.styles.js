@@ -196,4 +196,21 @@ export default StyleSheet.create({
     fontWeight: "600",
     fontSize: 16,
   },
+
+  aiBox: {
+  marginTop: 10,
+  padding: 12,
+  backgroundColor: "#f3f6ff",
+  borderRadius: 10,
+  borderWidth: 1,
+  borderColor: "#d6e0ff",
+},
+
+aiText: {
+  marginTop: 6,
+  fontSize: 13,
+  color: "#444",
+  lineHeight: 18,
+},
+
 });

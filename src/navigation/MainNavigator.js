@@ -5,7 +5,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import COLORS from "../constants/colors";
 import HistoryScreen from "../screens/home/history/HistoryScreen";
 import HomeScreen from "../screens/home/home/HomeScreen";
-import MyVehicleScreen from "../screens/home/vehicle/MyVehicleScreen";
+import VehicleStackNavigator from "./VehicleStackNavigator";
+
 import ProfileStack from "./ProfileStackNavigator";
 
 const Tab = createBottomTabNavigator();
@@ -39,7 +40,8 @@ export default function MainNavigator({ setIsLoggedIn }) {
         })}
       >
         <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Vehicle" component={MyVehicleScreen} />
+        <Tab.Screen name="Vehicle" component={VehicleStackNavigator} />
+
         <Tab.Screen name="History" component={HistoryScreen} />
         <Tab.Screen
           name="Profile"
