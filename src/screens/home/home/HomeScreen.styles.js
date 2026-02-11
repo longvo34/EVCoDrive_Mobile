@@ -67,25 +67,23 @@ export default StyleSheet.create({
   },
 
   carCard: {
-    width: 260,
-    height: 320,
-    borderRadius: 20,
-    backgroundColor: '#fff',
-    marginRight: 16,
-    overflow: 'hidden',
-  },
+  width: 260,
+  borderRadius: 20,
+  backgroundColor: '#fff',
+  marginRight: 16,
+  overflow: 'hidden',
+},
 
-  carImage: {
-    width: '100%',
-    height: '80%',
-  },
+carImage: {
+  width: '100%',
+  height: 180,   
+},
 
-  carFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 12,
-  },
+carFooter: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  padding: 12,
+},
 
   carName: {
     fontSize: 16,

@@ -1,7 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Image,
   ScrollView,
@@ -10,6 +9,7 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import EVLoading from "../../../components/animation/EVLoading";
 import { getMyProfile } from "../../../services/auth/auth.service";
 import { getGroupsWithAvailableShares } from "../../../services/coOwnerGroup/coOwnerGroup.service";
 import { getVehicleById } from "../../../services/vehicle/vehicle.service";
@@ -80,16 +80,13 @@ export default function HomeScreen() {
   }, []);
 
   if (loading) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
-          <ActivityIndicator size="large" />
-        </View>
-      </SafeAreaView>
-    );
-  }
+  return (
+    <SafeAreaView style={styles.safe}>
+      <EVLoading />
+    </SafeAreaView>
+  );
+}
+
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -130,16 +127,20 @@ export default function HomeScreen() {
         >
           {groups.map((group) => (
             <TouchableOpacity
-  key={group.coOwnerGroupId}
-  style={styles.carCard}
-  activeOpacity={0.8}
-  onPress={() =>
-    navigation.navigate("GroupShare", {
-      groupId: group.coOwnerGroupId,
-      vehicleId: group.vehicleId,
-    })
-  }
->
+              key={group.coOwnerGroupId}
+              style={styles.carCard}
+              activeOpacity={0.8}
+              onPress={() =>
+                navigation.navigate("GroupShare", {
+                  groupId: group.coOwnerGroupId,
+  vehicleId: group.vehicleId,
+  vehicleBrand: group.vehicleBrand,
+  vehicleModel: group.vehicleModel,
+  licensePlate: group.licensePlate,
+  imageUrl: group.imageUrl,
+                })
+              }
+            >
 
               <Image
                 source={{
@@ -163,7 +164,7 @@ export default function HomeScreen() {
 
                   <Text style={{ fontSize: 12 }}>
                     Đang bán:{" "}
-                    {group.totalSharesForSale} share
+                    {group.totalSharesForSale} gói đầu tư
                   </Text>
 
                   <Text
@@ -172,8 +173,9 @@ export default function HomeScreen() {
                       fontWeight: "bold",
                     }}
                   >
-                    Giá từ:{" "}
-                    {group.lowestPricePerShare?.toLocaleString()}{" "}
+                    Giá:{" "}
+
+                    {group.highestPricePerShare?.toLocaleString()}{" "}
                     VND
                   </Text>
                 </View>
@@ -182,7 +184,7 @@ export default function HomeScreen() {
                   <Text style={styles.arrow}>↗</Text>
                 </View>
               </View>
-           </TouchableOpacity>
+            </TouchableOpacity>
 
           ))}
         </ScrollView>
