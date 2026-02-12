@@ -19,6 +19,7 @@ import styles from "./ProfileScreen.styles";
 export default function ProfileScreen({ setIsLoggedIn }) {
   const navigation = useNavigation();
   const [profile, setProfile] = useState(null);
+  const [redirectedToEKYC, setRedirectedToEKYC] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -29,7 +30,14 @@ export default function ProfileScreen({ setIsLoggedIn }) {
   const fetchProfile = async () => {
     try {
       const res = await getUserProfile();
-      setProfile(res.data.data);
+      const data = res.data.data;
+      setProfile(data);
+
+      // If profile missing critical fields, force eKYC once
+      if (( !data?.dateOfBirth || !data?.address ) && !redirectedToEKYC) {
+        setRedirectedToEKYC(true);
+        navigation.navigate("EKYC");
+      }
     } catch (err) {
       console.log("GET PROFILE ERROR:", err.response?.data || err.message);
     }

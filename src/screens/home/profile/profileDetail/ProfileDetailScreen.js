@@ -38,6 +38,7 @@ const normalizeGender = (sex) => {
 
 export default function ProfileDetailScreen({ navigation, route }) {
   const ekycData = route.params?.ekycData;
+  const onProfileUpdated = route.params?.onProfileUpdated;
 
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
@@ -111,7 +112,15 @@ export default function ProfileDetailScreen({ navigation, route }) {
       await updateUserProfile(payload);
 
       Alert.alert("Thành công", "Cập nhật profile thành công");
-      navigation.navigate("Profile");
+      
+      // Notify RootNavigator to refetch profile
+      if (typeof onProfileUpdated === "function") {
+        onProfileUpdated();
+      }
+      
+      // Pop back to ProfileMain; MainNavigator will re-render when forceProfileUpdate becomes false
+      // and show all tabs. Use navigation.reset or goBack to return to profile stack root
+      navigation.popToTop();
     } catch (err) {
       console.log("UPDATE ERROR:", err.response?.data || err);
       Alert.alert(
