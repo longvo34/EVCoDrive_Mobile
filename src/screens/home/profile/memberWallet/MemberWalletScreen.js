@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import * as Linking from "expo-linking";
+import { useCallback, useEffect, useState } from "react";
 import {
     Alert,
     FlatList,
@@ -12,12 +13,23 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import EVLoading from "../../../../components/animation/EVLoading";
-import { createWallet, getWalletByMemberId, getWithdrawalsByMemberId, topUpWallet, withdrawWallet, } from "../../../../services/memberWallet/memberWallet.service";
+import { createWallet, getWalletByMemberId, getWithdrawalsByMemberId, withdrawWallet } from "../../../../services/memberWallet/memberWallet.service";
+import { createPaymentUrl } from "../../../../services/payment/payment.service";
 import { getProfileMember } from "../../../../services/profile/profile.service";
 import styles from "./MemberWalletScreen.styles";
 
 export default function MemberWalletScreen() {
   const navigation = useNavigation();
+
+  const MIN_PRICE = 10000;
+  const MAX_PRICE = 100000000;
+
+  const formatCurrency = (value) => {
+    if (!value) return "";
+    return value
+      .replace(/\D/g, "")
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
 
   const [memberId, setMemberId] = useState(null);
   const [balance, setBalance] = useState(0);
@@ -34,43 +46,36 @@ export default function MemberWalletScreen() {
   initData();
 }, []);
 
-const initData = async () => {
-  console.log("========== INIT DATA ==========");
+useFocusEffect(
+  useCallback(() => {
+    if (memberId) {
+      console.log("🔄 Screen focus → reload wallet");
+      loadWallet(memberId);
+    }
+  }, [memberId])
+);
 
+const initData = async () => {
   try {
     setLoading(true);
-    console.log("🔄 Loading profile...");
 
     const profileRes = await getProfileMember();
-    console.log("✅ PROFILE RESPONSE:", profileRes.data);
-
     const profile = profileRes.data;
 
     if (!profile?.memberId) {
-      console.log("❌ Không có memberId trong profile");
       Alert.alert("Lỗi", "Không tìm thấy memberId");
       return;
     }
 
-    console.log("✅ memberId:", profile.memberId);
-
     setMemberId(profile.memberId);
 
-    await loadWallet(profile.memberId);
-
-    console.log("✅ INIT DATA SUCCESS");
   } catch (error) {
-    console.log("❌ INIT ERROR:");
-    console.log("Status:", error.response?.status);
-    console.log("Data:", error.response?.data);
-    console.log("Message:", error.message);
-
-    Alert.alert("Lỗi", "Không thể tải dữ liệu ví");
+    console.log("INIT ERROR:", error.response?.data || error.message);
   } finally {
     setLoading(false);
-    console.log("========== END INIT ==========");
   }
 };
+
 
 const loadWallet = async (id) => {
   console.log("========== LOAD WALLET ==========");
@@ -134,48 +139,67 @@ const handleConfirm = async () => {
     return;
   }
 
-  console.log("========== TRANSACTION ==========");
-  console.log("Type:", actionType);
-  console.log("Amount:", amount);
-  console.log("MemberId:", memberId);
+  const amountNum = Number(amount.replace(/\./g, ""));
+  if (isNaN(amountNum) || amountNum <= 0) {
+    Alert.alert("Lỗi", "Vui lòng nhập số tiền hợp lệ");
+    return;
+  }
+  if (amountNum < MIN_PRICE) {
+    Alert.alert("Lỗi", `Số tiền tối thiểu là ${MIN_PRICE.toLocaleString("vi-VN")} đ`);
+    return;
+  }
+  if (amountNum > MAX_PRICE) {
+    Alert.alert("Lỗi", `Số tiền tối đa là ${MAX_PRICE.toLocaleString("vi-VN")} đ`);
+    return;
+  }
 
   try {
     setLoading(true);
     setModalVisible(false);
 
-    const payload = {
-      memberId: memberId,
-      amount: Number(amount),
-    };
-
-    console.log("📦 Payload:", payload);
-
     if (actionType === "topup") {
-      console.log("🔄 Calling topUpWallet...");
-      const res = await topUpWallet(payload);
-      console.log("✅ TOPUP SUCCESS:", res.data);
+      console.log("🔄 Creating VNPay payment...");
+
+      const payload = {
+        memberId: memberId,
+        amount: amountNum,
+      };
+
+      const res = await createPaymentUrl(payload);
+
+      console.log("✅ CREATE PAYMENT RESPONSE:", res.data);
+
+      const paymentUrl = res.data?.data?.paymentUrl;
+
+      if (!paymentUrl) {
+        throw new Error("Không nhận được paymentUrl");
+      }
+
+      console.log("🌐 Opening VNPay sandbox...");
+      await Linking.openURL(paymentUrl);
     } else {
-      console.log("🔄 Calling withdrawWallet...");
+      const payload = {
+        memberId: memberId,
+        amount: amountNum,
+      };
+
       const res = await withdrawWallet(payload);
       console.log("✅ WITHDRAW SUCCESS:", res.data);
+
+      await loadWallet(memberId);
     }
 
-    await loadWallet(memberId);
     setAmount("");
-
-    console.log("✅ TRANSACTION SUCCESS");
   } catch (error) {
     console.log("❌ TRANSACTION ERROR:");
-    console.log("Status:", error.response?.status);
-    console.log("Data:", error.response?.data);
-    console.log("Message:", error.message);
+    console.log(error.response?.data || error.message);
 
     Alert.alert("Lỗi", "Giao dịch thất bại");
   } finally {
     setLoading(false);
-    console.log("========== END TRANSACTION ==========");
   }
 };
+
 
   const renderItem = ({ item }) => (
     <View style={styles.transactionItem}>
@@ -201,6 +225,11 @@ const handleConfirm = async () => {
       </Text>
     </View>
   );
+
+  const openModal = (type) => {
+  setActionType(type);
+  setModalVisible(true);
+};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -264,10 +293,22 @@ const handleConfirm = async () => {
 
             <TextInput
               style={styles.input}
-              placeholder="Nhập số tiền"
+              placeholder="10.000 - 100.000.000 đ"
               keyboardType="numeric"
               value={amount}
-              onChangeText={setAmount}
+              onChangeText={(text) => {
+                const rawNumber = text.replace(/\D/g, "");
+                if (rawNumber === "") {
+                  setAmount("");
+                } else {
+                  const numValue = Number(rawNumber);
+                  if (numValue <= MAX_PRICE) {
+                    const formatted = formatCurrency(rawNumber);
+                    setAmount(formatted);
+                  }
+                }
+              }}
+              maxLength={15}
             />
 
             <View style={styles.modalButtons}>
