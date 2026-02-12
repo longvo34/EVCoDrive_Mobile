@@ -88,6 +88,14 @@ export default function ProfileScreen({ setIsLoggedIn }) {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.menu}>
+             <MenuItem
+              icon={
+                <Ionicons name="wallet-outline" size={22} color={COLORS.text} />
+              }
+              label="Ví của tôi"
+              onPress={() => navigation.navigate("MemberWallet")}
+            />
+
             <MenuItem
               icon={
                 <Ionicons name="car-outline" size={22} color={COLORS.text} />
