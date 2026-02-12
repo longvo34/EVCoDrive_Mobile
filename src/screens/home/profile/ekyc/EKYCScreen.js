@@ -12,9 +12,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { uploadCCCD } from "../../../../services/ekyc/ekyc.service";
+import { clearTokens } from "../../../../utils/authStorage";
 import styles from "./EKYCScreen.styles";
 
-export default function EKYCScreen({ navigation }) {
+export default function EKYCScreen({ navigation, setIsLoggedIn }) {
   const [front, setFront] = useState(null);
   const [back, setBack] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -79,7 +80,27 @@ export default function EKYCScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          onPress={async () => {
+            if (navigation.canGoBack && navigation.canGoBack()) {
+              navigation.goBack();
+              return;
+            }
+
+            // No back screen — clear tokens and go to Login
+            try {
+              await clearTokens();
+            } catch (err) {
+              console.log("CLEAR TOKENS ERROR:", err);
+            }
+
+            if (typeof setIsLoggedIn === "function") {
+              setIsLoggedIn(false);
+            } else {
+              navigation.navigate("Login");
+            }
+          }}
+        >
           <Ionicons name="arrow-back" size={24} />
         </TouchableOpacity>
 

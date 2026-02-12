@@ -11,7 +11,7 @@ import ProfileStack from "./ProfileStackNavigator";
 
 const Tab = createBottomTabNavigator();
 
-export default function MainNavigator({ setIsLoggedIn }) {
+export default function MainNavigator({ setIsLoggedIn, forceProfileUpdate, onProfileUpdated }) {
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
       <Tab.Navigator
@@ -39,36 +39,45 @@ export default function MainNavigator({ setIsLoggedIn }) {
           tabBarStyle: { backgroundColor: "#ffffff" },
         })}
       >
-        <Tab.Screen
-  name="Home"
-  component={HomeStackNavigator}
-  listeners={({ navigation }) => ({
-    tabPress: () => {
-      navigation.navigate("Home", {
-        screen: "HomeMain",
-      });
-    },
-  })}
-/>
+        {forceProfileUpdate ? (
+          <Tab.Screen name="Profile">
+            {(props) => (
+              <ProfileStack {...props} setIsLoggedIn={setIsLoggedIn} forceProfileUpdate={forceProfileUpdate} onProfileUpdated={onProfileUpdated} />
+            )}
+          </Tab.Screen>
+        ) : (
+          <>
+            <Tab.Screen
+              name="Home"
+              component={HomeStackNavigator}
+              listeners={({ navigation }) => ({
+                tabPress: () => {
+                  navigation.navigate("Home", {
+                    screen: "HomeMain",
+                  });
+                },
+              })}
+            />
 
+            <Tab.Screen name="Vehicle" component={VehicleStackNavigator} />
 
-        <Tab.Screen name="Vehicle" component={VehicleStackNavigator} />
+            <Tab.Screen name="History" component={HistoryScreen} />
+            <Tab.Screen
+              name="Profile"
+              listeners={({ navigation }) => ({
+                tabPress: (e) => {
+                  e.preventDefault();
 
-        <Tab.Screen name="History" component={HistoryScreen} />
-        <Tab.Screen
-          name="Profile"
-          listeners={({ navigation }) => ({
-            tabPress: (e) => {
-              e.preventDefault();
-
-              navigation.navigate("Profile", {
-                screen: "ProfileMain",
-              });
-            },
-          })}
-        >
-          {(props) => <ProfileStack {...props} setIsLoggedIn={setIsLoggedIn} />}
-        </Tab.Screen>
+                  navigation.navigate("Profile", {
+                    screen: "ProfileMain",
+                  });
+                },
+              })}
+            >
+              {(props) => <ProfileStack {...props} setIsLoggedIn={setIsLoggedIn} />}
+            </Tab.Screen>
+          </>
+        )}
       </Tab.Navigator>
     </SafeAreaView>
   );
