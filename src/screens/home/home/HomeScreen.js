@@ -1,5 +1,5 @@
-import { useNavigation } from "@react-navigation/native";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useCallback, useState } from "react";
 import {
   Alert,
   Image,
@@ -23,30 +23,25 @@ export default function HomeScreen() {
   const navigation = useNavigation();
 
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        // 1️⃣ Lấy profile
         const profileRes = await getMyProfile();
-
         if (!profileRes.data?.isSuccess) {
           throw new Error(profileRes.data?.message || "Get profile failed");
         }
-
         setUser(profileRes.data.data);
 
-        // 2️⃣ Lấy danh sách group có share bán
         const groupRes = await getGroupsWithAvailableShares();
-
         if (!groupRes.data?.isSuccess) {
           throw new Error(groupRes.data?.message || "Get groups failed");
         }
 
         const groupsData = groupRes.data.data;
 
-        // 3️⃣ Gọi song song API vehicle để lấy ảnh
         const groupsWithImages = await Promise.all(
           groupsData.map(async (group) => {
             try {
@@ -55,14 +50,10 @@ export default function HomeScreen() {
 
               return {
                 ...group,
-                imageUrl:
-                  vehicle.images?.[0]?.secureUrl || null,
+                imageUrl: vehicle.images?.[0]?.secureUrl || null,
               };
-            } catch (err) {
-              return {
-                ...group,
-                imageUrl: null,
-              };
+            } catch {
+              return { ...group, imageUrl: null };
             }
           })
         );
@@ -77,7 +68,9 @@ export default function HomeScreen() {
     };
 
     fetchData();
-  }, []);
+  }, [])
+);
+
 
   if (loading) {
   return (
