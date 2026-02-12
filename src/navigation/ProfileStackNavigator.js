@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import ProfileScreen from "../screens/home/profile/ProfileScreen";
 import ChangePasswordScreen from "../screens/home/profile/changePassword/ChangePassword";
 import EKYCScreen from "../screens/home/profile/ekyc/EKYCScreen";
+import MemberWalletScreen from "../screens/home/profile/memberWallet/MemberWalletScreen";
 import ProfileDetailScreen from "../screens/home/profile/profileDetail/ProfileDetailScreen";
 import RegisterVehicleStackNavigator from "./RegisterVehicleStackNavigator";
 
@@ -24,6 +25,7 @@ export default function ProfileStack({ setIsLoggedIn }) {
           <ChangePasswordScreen {...props} setIsLoggedIn={setIsLoggedIn} />
         )}
       </Stack.Screen>
+      <Stack.Screen name="MemberWallet" component={MemberWalletScreen} />
     </Stack.Navigator>
   );
 }
