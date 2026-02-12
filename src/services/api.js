@@ -10,10 +10,9 @@ const API_URL = Constants.expoConfig.extra.API_URL;
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 10000,
+  timeout: 30000, 
 });
 
-/* ================= REQUEST INTERCEPTOR ================= */
 const NO_AUTH_ENDPOINTS = [
   "/auth/login",
   "/auth/register",
@@ -42,7 +41,6 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-/* ================= RESPONSE INTERCEPTOR ================= */
 let isRefreshing = false;
 let failedQueue = [];
 

@@ -98,7 +98,13 @@ export default function Step4UploadDocsScreen() {
       );
     } catch (error) {
       console.error("Tạo xe thất bại:", error);
-      Alert.alert("Lỗi", "Không thể đăng ký xe. Vui lòng thử lại sau.");
+      console.error("Message:", error.message);
+ 
+      const errorMessage = error.code === 'ECONNABORTED' 
+        ? "Quá thời gian. Vui lòng kiểm tra kết nối mạng và thử lại."
+        : error.message || "Không thể đăng ký xe. Vui lòng thử lại sau.";
+      
+      Alert.alert("Lỗi", errorMessage);
     } finally {
       setLoading(false);
     }
