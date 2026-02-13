@@ -90,19 +90,21 @@ export default function GroupShareScreen() {
         onPress={() => toggleSelect(item.shareUnitId)}
         activeOpacity={0.8}
       >
-        <View>
-          <Text style={styles.shareTitle}>
-            Share #{item.displayNumber}
-          </Text>
+       <View>
+  <Text style={styles.shareTitle}>
+    Cổ phần {item.displayNumber}
+  </Text>
 
-          <Text style={styles.text}>
-            Certificate: {item.certificateCode}
-          </Text>
+  <Text style={styles.text}>
+    Ngày bán: {item.listedDate
+      ? new Date(item.listedDate).toLocaleDateString("vi-VN")
+      : ""}
+  </Text>
 
-          <Text style={styles.price}>
-            {item.price?.toLocaleString()} {item.currency}
-          </Text>
-        </View>
+  <Text style={styles.price}>
+    {item.price?.toLocaleString()} {item.currency}
+  </Text>
+</View>
 
         <View
           style={{
