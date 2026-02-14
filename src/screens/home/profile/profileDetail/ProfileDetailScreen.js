@@ -113,13 +113,10 @@ export default function ProfileDetailScreen({ navigation, route }) {
 
       Alert.alert("Thành công", "Cập nhật profile thành công");
       
-      // Notify RootNavigator to refetch profile
       if (typeof onProfileUpdated === "function") {
         onProfileUpdated();
       }
-      
-      // Pop back to ProfileMain; MainNavigator will re-render when forceProfileUpdate becomes false
-      // and show all tabs. Use navigation.reset or goBack to return to profile stack root
+    
       navigation.popToTop();
     } catch (err) {
       console.log("UPDATE ERROR:", err.response?.data || err);
