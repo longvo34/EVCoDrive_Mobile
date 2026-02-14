@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import COLORS from "../constants/colors";
-import HistoryScreen from "../screens/home/history/HistoryScreen";
+import HistoryStackNavigator from "./HistoryStackNavigator";
 import HomeStackNavigator from "./HomeStackNavigator";
 import VehicleStackNavigator from "./VehicleStackNavigator";
 
@@ -61,7 +61,7 @@ export default function MainNavigator({ setIsLoggedIn, forceProfileUpdate, onPro
 
             <Tab.Screen name="Vehicle" component={VehicleStackNavigator} />
 
-            <Tab.Screen name="History" component={HistoryScreen} />
+            <Tab.Screen name="History" component={HistoryStackNavigator} />
             <Tab.Screen
               name="Profile"
               listeners={({ navigation }) => ({
