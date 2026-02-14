@@ -168,4 +168,94 @@ actionRow: {
   gap: 10, 
 },
 
+buyCard: {
+  backgroundColor: COLORS.white,
+  borderRadius: 18,
+  padding: 16,
+  marginBottom: 14,
+  borderWidth: 1,
+  borderColor: COLORS.background,
+  shadowColor: COLORS.black,
+  shadowOffset: { width: 0, height: 3 },
+  shadowOpacity: 0.06,
+  shadowRadius: 6,
+  elevation: 3,
+},
+
+buyHeaderRow: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+},
+
+buyGroupName: {
+  fontSize: 15,
+  fontWeight: "700",
+  color: COLORS.text,
+  flex: 1,
+  marginRight: 10,
+},
+
+buyPlate: {
+  marginTop: 6,
+  fontSize: 13,
+  color: COLORS.gray,
+},
+
+buyPrice: {
+  marginTop: 10,
+  fontSize: 16,
+  fontWeight: "700",
+  color: COLORS.softGreen, 
+},
+
+buyMetaRow: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  marginTop: 10,
+},
+
+buyMetaText: {
+  fontSize: 12,
+  color: COLORS.gray,
+},
+
+buyStatusBadge: {
+  paddingHorizontal: 10,
+  paddingVertical: 5,
+  borderRadius: 999,
+},
+
+buyStatusText: {
+  fontSize: 11,
+  fontWeight: "700",
+},
+
+
+
+buyProcessing: {
+  backgroundColor: "#FFF7ED", 
+},
+
+buyProcessingText: {
+  color: "#EA580C", 
+},
+
+buyCompleted: {
+  backgroundColor: "#ECFDF5", 
+},
+
+buyCompletedText: {
+  color: COLORS.softGreen,
+},
+
+buyCancelled: {
+  backgroundColor: "#FEF2F2",
+},
+
+buyCancelledText: {
+  color: "#DC2626",
+},
+
+
 });

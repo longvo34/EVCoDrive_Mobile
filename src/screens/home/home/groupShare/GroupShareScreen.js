@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import EVLoading from "../../../../components/animation/EVLoading";
+import { createBuyRequest } from "../../../../services/buyRequest/buyRequest.service";
 import { getAvailableSharesByGroupId } from "../../../../services/coOwnerGroup/coOwnerGroup.service";
 import { getVehicleById } from "../../../../services/vehicle/vehicle.service";
 import styles from "./GroupShareScreen.styles";
@@ -129,6 +130,53 @@ export default function GroupShareScreen() {
     return <EVLoading visible={true} />;
   }
 
+const handleBuy = async () => {
+  try {
+    setLoading(true);
+
+    if (selectedShares.length === 0) return;
+
+    const firstShare = shares.find(
+      (s) => s.shareUnitId === selectedShares[0]
+    );
+
+    const payload = {
+      sellRequestId: firstShare.sellRequestId,
+      shareUnitIds: selectedShares,
+    };
+
+    await createBuyRequest(payload);
+
+    Alert.alert("Thành công", "Tạo yêu cầu mua thành công");
+
+    setSelectedShares([]);
+
+    fetchShares();
+
+  } catch (err) {
+  const errorData = err?.response?.data;
+
+  console.log("BUY ERROR:", errorData || err);
+
+  if (errorData?.errorCode === "VAL_3003") {
+    Alert.alert(
+      "Cổ phần đã hết hạn",
+      "Đợt bán cổ phần này đã hết hạn. Vui lòng chọn cổ phần khác."
+    );
+
+    fetchShares();
+  } else {
+    Alert.alert(
+      "Lỗi",
+      errorData?.message || "Không thể tạo yêu cầu mua"
+    );
+  }
+}finally {
+    setLoading(false);
+  }
+};
+
+
   return (
 
 
@@ -241,12 +289,16 @@ export default function GroupShareScreen() {
               borderRadius: 12,
               alignItems: "center",
             }}
-            onPress={() =>
-              Alert.alert(
-                "Xác nhận",
-                `Bạn muốn mua ${selectedShares.length} cổ phần?`
-              )
-            }
+           onPress={() =>
+  Alert.alert(
+    "Xác nhận",
+    `Bạn muốn mua ${selectedShares.length} cổ phần?`,
+    [
+      { text: "Huỷ", style: "cancel" },
+      { text: "Mua", onPress: handleBuy }
+    ]
+  )
+}
           >
             <Text style={{ fontWeight: "bold" }}>
               Mua {selectedShares.length} cổ phần
