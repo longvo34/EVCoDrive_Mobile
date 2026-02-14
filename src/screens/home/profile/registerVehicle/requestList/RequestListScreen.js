@@ -11,7 +11,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import EVLoading from "../../../../../components/animation/EVLoading";
 import COLORS from "../../../../../constants/colors";
-import { getMyBuyRequests } from "../../../../../services/buyRequest/buyRequest.service";
 import { getProfileMember } from "../../../../../services/profile/profile.service";
 import { getVehiclesByMemberId } from "../../../../../services/vehicle/vehicle.service";
 import { getVehicleBrands } from "../../../../../services/vehicleBrand/vehicleBrand.service";
@@ -24,8 +23,6 @@ export default function RequestListScreen({ navigation }) {
   const [vehicles, setVehicles] = useState([]);
   const [brands, setBrands] = useState([]);
   const [models, setModels] = useState([]);
-  const [activeTab, setActiveTab] = useState("buy"); 
-const [buyRequests, setBuyRequests] = useState([]);
 
   useEffect(() => {
     fetchInitialData();
@@ -38,45 +35,40 @@ const [buyRequests, setBuyRequests] = useState([]);
     return unsubscribe;
   }, [navigation]);
 
-const fetchInitialData = async () => {
-  try {
-    setLoading(true);
+  const fetchInitialData = async () => {
+    try {
+      setLoading(true);
 
-    const [brandRes, modelRes, memberRes, buyRes] = await Promise.all([
-      getVehicleBrands(),
-      getVehicleModels(),
-      getProfileMember(),
-      getMyBuyRequests(),
-    ]);
+      const [brandRes, modelRes, memberRes] = await Promise.all([
+        getVehicleBrands(),
+        getVehicleModels(),
+        getProfileMember(),
+      ]);
 
-    const brandsData = Array.isArray(brandRes.data)
-      ? brandRes.data
-      : brandRes.data?.data || brandRes || [];
-    const modelsData = Array.isArray(modelRes.data)
-      ? modelRes.data
-      : modelRes.data?.data || modelRes || [];
+      const brandsData = Array.isArray(brandRes.data)
+        ? brandRes.data
+        : brandRes.data?.data || brandRes || [];
+      const modelsData = Array.isArray(modelRes.data)
+        ? modelRes.data
+        : modelRes.data?.data || modelRes || [];
 
-    setBrands(brandsData);
-    setModels(modelsData);
+      setBrands(brandsData);
+      setModels(modelsData);
 
-    setBuyRequests(buyRes.data?.data?.items || []);
+      const memberId = memberRes.data.memberId;
+      const vehicleRes = await getVehiclesByMemberId(memberId);
 
-    const memberId = memberRes.data.memberId;
-    const vehicleRes = await getVehiclesByMemberId(memberId);
-
-    setVehicles(vehicleRes.data.data || vehicleRes.data || []);
-  } catch (error) {
-    console.log("❌ FETCH ERROR:", error);
-    setVehicles([]);
-    setBuyRequests([]);
-    setBrands([]);
-    setModels([]);
-  } finally {
-    setLoading(false);
-    setRefreshing(false);
-  }
-};
-
+      setVehicles(vehicleRes.data.data || vehicleRes.data || []);
+    } catch (error) {
+      console.log("❌ FETCH ERROR:", error);
+      setVehicles([]);
+      setBrands([]);
+      setModels([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -210,67 +202,6 @@ const fetchInitialData = async () => {
     </View>
   );
 
- const renderBuyItem = ({ item }) => {
-  const getStatusStyle = () => {
-    if (item.status === "Completed") {
-      return {
-        container: styles.buyCompleted,
-        text: styles.buyCompletedText,
-        label: "Hoàn tất",
-      };
-    }
-    if (item.status === "Cancelled") {
-      return {
-        container: styles.buyCancelled,
-        text: styles.buyCancelledText,
-        label: "Đã hủy",
-      };
-    }
-    return {
-      container: styles.buyProcessing,
-      text: styles.buyProcessingText,
-      label: "Đang xử lý",
-    };
-  };
-
-  const statusStyle = getStatusStyle();
-
-  return (
-    <View style={styles.buyCard}>
-      <View style={styles.buyHeaderRow}>
-        <Text style={styles.buyGroupName}>
-          {item.groupName}
-        </Text>
-
-        <View style={[styles.buyStatusBadge, statusStyle.container]}>
-          <Text style={[styles.buyStatusText, statusStyle.text]}>
-            {statusStyle.label}
-          </Text>
-        </View>
-      </View>
-
-      <Text style={styles.buyPlate}>
-        🚘 {item.vehicleLicensePlate}
-      </Text>
-
-      <Text style={styles.buyPrice}>
-        {item.totalPrice?.toLocaleString()} {item.currency}
-      </Text>
-
-      <View style={styles.buyMetaRow}>
-        <Text style={styles.buyMetaText}>
-          📦 {item.quantity} cổ phần
-        </Text>
-
-        <Text style={styles.buyMetaText}>
-          📅 {new Date(item.createdDate).toLocaleDateString("vi-VN")}
-        </Text>
-      </View>
-    </View>
-  );
-};
-
-
   return (
     <SafeAreaView style={styles.container}>
       {loading && <EVLoading />}
@@ -287,61 +218,32 @@ const fetchInitialData = async () => {
       </View>
 
       {/* TAB */}
-     <View style={styles.tabRow}>
-  <TouchableOpacity
-    style={[styles.tab, activeTab === "buy" && styles.activeTab]}
-    onPress={() => setActiveTab("buy")}
-  >
-    <Text
-      style={[
-        styles.tabText,
-        activeTab === "buy" && styles.activeTabText,
-      ]}
-    >
-      Yêu cầu mua
-    </Text>
-  </TouchableOpacity>
-
-  <TouchableOpacity
-    style={[styles.tab, activeTab === "vehicle" && styles.activeTab]}
-    onPress={() => setActiveTab("vehicle")}
-  >
-    <Text
-      style={[
-        styles.tabText,
-        activeTab === "vehicle" && styles.activeTabText,
-      ]}
-    >
-      Đăng ký xe
-    </Text>
-  </TouchableOpacity>
-</View>
-
+      <View style={styles.tabRow}>
+        <View style={styles.tab}>
+          <Text style={styles.tabText}>Yêu cầu mua</Text>
+        </View>
+        <View style={[styles.tab, styles.activeTab]}>
+          <Text style={[styles.tabText, styles.activeTabText]}>
+            Đăng ký xe
+          </Text>
+        </View>
+      </View>
 
       {/* LIST */}
       <FlatList
-  data={activeTab === "buy" ? buyRequests : vehicles}
-  keyExtractor={(item) =>
-    activeTab === "buy"
-      ? item.buyRequestId
-      : item.vehicleId
-  }
-  renderItem={
-    activeTab === "buy"
-      ? renderBuyItem
-      : renderItem
-  }
-  showsVerticalScrollIndicator={false}
-  contentContainerStyle={{
-    flexGrow: 1,
-    paddingBottom: 100,
-  }}
-  ListEmptyComponent={!loading && renderEmpty}
-  refreshControl={
-    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-  }
-/>
-
+        data={vehicles}
+        keyExtractor={(item) => item.vehicleId}
+        renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingBottom: 100,
+        }}
+        ListEmptyComponent={!loading && renderEmpty}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      />
 
       {/* FLOAT BUTTON */}
       <TouchableOpacity

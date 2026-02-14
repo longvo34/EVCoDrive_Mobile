@@ -54,7 +54,7 @@ export const createVehicleWithImages = async (data, images = []) => {
     headers: {
       "Content-Type": "multipart/form-data",
     },
-    timeout: 60000, // Timeout 60 giây cho upload ảnh
+    timeout: 60000, 
   });
 };
 
