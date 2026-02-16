@@ -4,6 +4,12 @@ export const createBuyRequest = (data) => {
   return api.post("/buyrequests", data);
 };
 
+export const getIncomingBuyRequests = (params) => {
+  return api.get("/buyrequests/incoming", {
+    params, 
+  });
+};
+
 export const getMyBuyRequests = () => {
   console.log("📡 API getMyBuyRequests HIT");
   return api.get("/buyrequests/my-requests");

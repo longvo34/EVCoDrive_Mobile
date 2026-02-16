@@ -4,6 +4,7 @@ import ChangePasswordScreen from "../screens/home/profile/changePassword/ChangeP
 import EKYCScreen from "../screens/home/profile/ekyc/EKYCScreen";
 import MemberWalletScreen from "../screens/home/profile/memberWallet/MemberWalletScreen";
 import ProfileDetailScreen from "../screens/home/profile/profileDetail/ProfileDetailScreen";
+import BuyRequest from "../screens/home/profile/registerVehicle/buyRequest/BuyRequest";
 import RegisterVehicleStackNavigator from "./RegisterVehicleStackNavigator";
 
 const Stack = createNativeStackNavigator();
@@ -24,6 +25,7 @@ export default function ProfileStack({ setIsLoggedIn, forceProfileUpdate, onProf
         name="RegisterVehicle"
         component={RegisterVehicleStackNavigator}
       />
+      <Stack.Screen name="BuyRequest" component = {BuyRequest} />
       <Stack.Screen name="ChangePassword">
         {(props) => (
           <ChangePasswordScreen {...props} setIsLoggedIn={setIsLoggedIn} />
