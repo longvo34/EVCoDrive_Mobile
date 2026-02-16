@@ -50,11 +50,17 @@ export default function HistoryScreen() {
 
 
   const fetchData = async () => {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const res = await getMyBuyRequests();
-      const data = res.data?.data?.items || [];
+    const res = await getMyBuyRequests();
+    let data = res.data?.data?.items || [];
+
+    data = data.filter(item => 
+      !["Cancelled", "Cancel"].includes(item.status)
+    );
+
+    console.log("Danh sách sau khi lọc Cancelled:", data.map(item => item.status));
 
       const enrichedData = await Promise.all(
         data.map(async (item) => {
@@ -92,9 +98,15 @@ export default function HistoryScreen() {
 
 
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+ useEffect(() => {
+  fetchData(); 
+
+  const unsubscribe = navigation.addListener('focus', () => {
+    fetchData(); 
+  });
+
+  return unsubscribe; 
+}, [navigation]);
 
   useMemo(() => {
     if (!searchQuery.trim()) {

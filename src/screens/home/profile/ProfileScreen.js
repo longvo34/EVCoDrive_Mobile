@@ -137,7 +137,7 @@ export default function ProfileScreen({ setIsLoggedIn }) {
 
            <MenuItem
   icon={<Ionicons name="add-circle-outline" size={22} color={COLORS.text} />}
-  label="Đăng ký xe"
+  label="Đăng ký xe và yêu cầu mua"
   onPress={() => {
     if (!profile?.dateOfBirth || !profile?.address) {
       Alert.alert(

@@ -11,18 +11,30 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import EVLoading from "../../../../../components/animation/EVLoading";
 import COLORS from "../../../../../constants/colors";
-import { getProfileMember } from "../../../../../services/profile/profile.service";
-import { getVehiclesByMemberId } from "../../../../../services/vehicle/vehicle.service";
-import { getVehicleBrands } from "../../../../../services/vehicleBrand/vehicleBrand.service";
-import { getVehicleModels } from "../../../../../services/vehicleModel/vehicleModel.service";
+import { getIncomingBuyRequests } from "../../../../../services/buyRequest/buyRequest.service";
+import {
+  getProfileMember
+} from "../../../../../services/profile/profile.service";
+import {
+  getVehiclesByMemberId
+} from "../../../../../services/vehicle/vehicle.service";
+import {
+  getVehicleBrands
+} from "../../../../../services/vehicleBrand/vehicleBrand.service";
+import {
+  getVehicleModels
+} from "../../../../../services/vehicleModel/vehicleModel.service";
+
 import styles from "./RequestListScreen.styles";
 
 export default function RequestListScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [vehicles, setVehicles] = useState([]);
+  const [vehicles, setVehicles] = useState([]);                
+  const [incomingRequests, setIncomingRequests] = useState([]); 
   const [brands, setBrands] = useState([]);
   const [models, setModels] = useState([]);
+  const [activeTab, setActiveTab] = useState("register");     
 
   useEffect(() => {
     fetchInitialData();
@@ -35,7 +47,7 @@ export default function RequestListScreen({ navigation }) {
     return unsubscribe;
   }, [navigation]);
 
-  const fetchInitialData = async () => {
+  const fetchInitialData = async (tab = activeTab) => {
     try {
       setLoading(true);
 
@@ -45,23 +57,27 @@ export default function RequestListScreen({ navigation }) {
         getProfileMember(),
       ]);
 
-      const brandsData = Array.isArray(brandRes.data)
-        ? brandRes.data
-        : brandRes.data?.data || brandRes || [];
-      const modelsData = Array.isArray(modelRes.data)
-        ? modelRes.data
-        : modelRes.data?.data || modelRes || [];
+      const brandsData = Array.isArray(brandRes.data) ? brandRes.data : brandRes.data?.data || [];
+      const modelsData = Array.isArray(modelRes.data) ? modelRes.data : modelRes.data?.data || [];
 
       setBrands(brandsData);
       setModels(modelsData);
 
       const memberId = memberRes.data.memberId;
-      const vehicleRes = await getVehiclesByMemberId(memberId);
 
+      const vehicleRes = await getVehiclesByMemberId(memberId);
       setVehicles(vehicleRes.data.data || vehicleRes.data || []);
+
+      const incomingRes = await getIncomingBuyRequests({
+        pageNumber: 1,
+        pageSize: 20,          
+      });
+      setIncomingRequests(incomingRes.data?.data?.items || incomingRes.data || []);
+
     } catch (error) {
       console.log("❌ FETCH ERROR:", error);
       setVehicles([]);
+      setIncomingRequests([]);
       setBrands([]);
       setModels([]);
     } finally {
@@ -72,7 +88,12 @@ export default function RequestListScreen({ navigation }) {
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchInitialData();
+    fetchInitialData(activeTab);
+  };
+
+  const switchTab = (tab) => {
+    setActiveTab(tab);
+    fetchInitialData(tab);
   };
 
   const getVehicleName = (modelId) => {
@@ -85,7 +106,8 @@ export default function RequestListScreen({ navigation }) {
     return `${brandName} ${model.name}`.trim() || "Xe không xác định";
   };
 
-  const renderStatus = (status) => {
+
+  const renderVehicleStatus = (status) => {
     let text = "";
     let color = COLORS.gray;
 
@@ -137,7 +159,49 @@ export default function RequestListScreen({ navigation }) {
     );
   };
 
-  const renderItem = ({ item }) => (
+  const renderBuyRequestStatus = (status) => {
+    let text = status;
+    let color = COLORS.gray;
+
+    switch (status) {
+      case "Processing":
+      case "Proccessing":
+        text = "Chờ duyệt";
+        color = "#d97706";
+        break;
+      case "Completed":
+      case "Complete":
+        text = "Hoàn thành";
+        color = "#10b981";
+        break;
+      case "Cancelled":
+      case "Cancel":
+        text = "Đã hủy";
+        color = "#ef4444";
+        break;
+      default:
+        text = status || "Không xác định";
+    }
+
+    return (
+      <Text
+        style={{
+          color,
+          fontWeight: "600",
+          fontSize: 13,
+          textAlign: "right",
+          flexShrink: 1,
+          maxWidth: "60%",
+        }}
+        numberOfLines={2}
+        ellipsizeMode="tail"
+      >
+        {text}
+      </Text>
+    );
+  };
+
+  const renderVehicleItem = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
       onPress={() => {
@@ -151,7 +215,7 @@ export default function RequestListScreen({ navigation }) {
         <Text style={styles.carName}>
           {getVehicleName(item.vehicleModelId)}
         </Text>
-        {renderStatus(item.vehicleStatus)}
+        {renderVehicleStatus(item.vehicleStatus)}
       </View>
 
       <Text style={styles.date}>
@@ -162,42 +226,118 @@ export default function RequestListScreen({ navigation }) {
         <Text style={styles.note}>🚘 {item.licensePlate}</Text>
       )}
 
-      {/* Nút "Đăng bán ngay" chỉ hiện khi SaleEligible */}
-    
-{item.vehicleStatus === "SaleEligible" && (
-  <View style={styles.actionRow}>
-
-    {/* Nút Đăng bán ngay */}
-    <TouchableOpacity
-      style={styles.sellNowButton}
-      onPress={() => {
-        navigation.navigate("RegisterVehicle", {
-          screen: "SellRequest",
-          params: { vehicleId: item.vehicleId },
-        });
-      }}
-    >
-      <Text style={styles.sellNowText}>Đăng bán ngay</Text>
+      {item.vehicleStatus === "SaleEligible" && (
+        <View style={styles.actionRow}>
+          <TouchableOpacity
+            style={styles.sellNowButton}
+            onPress={() => {
+              navigation.navigate("RegisterVehicle", {
+                screen: "SellRequest",
+                params: { vehicleId: item.vehicleId },
+              });
+            }}
+          >
+            <Text style={styles.sellNowText}>Đăng bán ngay</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </TouchableOpacity>
-
-   
-
-  </View>
-)}
-
-
-      
-    </TouchableOpacity>
-
-    
   );
 
-  const renderEmpty = () => (
+const renderBuyRequestItem = ({ item }) => (
+  <TouchableOpacity
+    style={styles.buyCard}
+    onPress={() => navigation.navigate("BuyRequest", { buyRequestId: item.buyRequestId })}
+  >
+    {/* Header: Tên group + Status badge */}
+    <View style={styles.buyCardHeader}>
+      <Text style={styles.groupName}>
+        {item.groupName || "Yêu cầu mua xe"}
+      </Text>
+
+      <View style={styles.buyStatusBadge}>
+        <Text style={styles.buyStatusText}>
+          {item.status === "Proccessing" || item.status === "Processing"
+            ? "Chờ duyệt"
+            : item.status === "Completed" || item.status === "Complete"
+            ? "Hoàn thành"
+            : item.status === "Cancelled" || item.status === "Cancel"
+            ? "Đã hủy"
+            : item.status || "Không xác định"}
+        </Text>
+      </View>
+    </View>
+
+    {/* Thông tin chi tiết */}
+    <View style={styles.infoRow}>
+      <Text style={styles.infoIcon}>📅</Text>
+      <Text style={styles.infoLabel}>Ngày tạo:</Text>
+      <Text style={styles.infoValue}>
+        {new Date(item.createdDate).toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })}
+      </Text>
+    </View>
+
+    <View style={styles.infoRow}>
+      <Text style={styles.infoIcon}>🚗</Text>
+      <Text style={styles.infoLabel}>Biển số:</Text>
+      <Text style={styles.infoValue}>
+        {item.vehicleLicensePlate || "Chưa có biển số"}
+      </Text>
+    </View>
+
+    <View style={styles.infoRow}>
+      <Text style={styles.infoIcon}>👤</Text>
+      <Text style={styles.infoLabel}>Người mua:</Text>
+      <Text style={styles.infoValue}>
+        {item.buyerName || "Ẩn danh"}
+      </Text>
+    </View>
+
+    {/* Phần giá tiền nổi bật */}
+    <View style={styles.priceSection}>
+      <Text style={styles.priceLabel}>Tổng giá:</Text>
+      <Text style={styles.priceValue}>
+        {item.totalPrice?.toLocaleString("vi-VN")} {item.currency || "VND"}
+      </Text>
+    </View>
+
+    {/* Số lượng cổ phần */}
+    <Text style={styles.quantityText}>
+      Số lượng cổ phần yêu cầu: {item.quantity || 1}
+    </Text>
+
+    {/* Cổ phần chi tiết (nếu muốn hiển thị thêm) */}
+    {item.requestedShares?.length > 0 && (
+      <View style={{ marginTop: 12 }}>
+        <Text style={{ fontSize: 13, fontWeight: "600", color: COLORS.text }}>
+          Cổ phần yêu cầu:
+        </Text>
+        {item.requestedShares.map((share, index) => (
+          <Text key={index} style={{ fontSize: 13, color: COLORS.gray, marginTop: 4 }}>
+            • Phần {share.shareUnitDisplayNumber} - {share.price?.toLocaleString("vi-VN")} VND
+            {" "}
+
+          </Text>
+        ))}
+      </View>
+    )}
+  </TouchableOpacity>
+);
+
+  const renderEmpty = (tab) => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="car-outline" size={64} color={COLORS.gray} />
-      <Text style={styles.emptyTitle}>Chưa đăng ký xe nào</Text>
+      <Ionicons name={tab === "buy" ? "cart-outline" : "car-outline"} size={64} color={COLORS.gray} />
+      <Text style={styles.emptyTitle}>
+        {tab === "buy" ? "Chưa có yêu cầu mua nào" : "Chưa đăng ký xe nào"}
+      </Text>
       <Text style={styles.emptyDesc}>
-        Nhấn dấu + để bắt đầu đăng ký xe của bạn
+        {tab === "buy" 
+          ? "Yêu cầu mua từ người khác sẽ hiển thị ở đây" 
+          : "Nhấn dấu + để bắt đầu đăng ký xe của bạn"}
       </Text>
     </View>
   );
@@ -219,39 +359,51 @@ export default function RequestListScreen({ navigation }) {
 
       {/* TAB */}
       <View style={styles.tabRow}>
-        <View style={styles.tab}>
-          <Text style={styles.tabText}>Yêu cầu mua</Text>
-        </View>
-        <View style={[styles.tab, styles.activeTab]}>
-          <Text style={[styles.tabText, styles.activeTabText]}>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === "buy" && styles.activeTab]}
+          onPress={() => switchTab("buy")}
+        >
+          <Text style={[styles.tabText, activeTab === "buy" && styles.activeTabText]}>
+            Yêu cầu mua
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === "register" && styles.activeTab]}
+          onPress={() => switchTab("register")}
+        >
+          <Text style={[styles.tabText, activeTab === "register" && styles.activeTabText]}>
             Đăng ký xe
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* LIST */}
       <FlatList
-        data={vehicles}
-        keyExtractor={(item) => item.vehicleId}
-        renderItem={renderItem}
+        data={activeTab === "buy" ? incomingRequests : vehicles}
+        keyExtractor={(item) => 
+          activeTab === "buy" ? item.buyRequestId : item.vehicleId
+        }
+        renderItem={activeTab === "buy" ? renderBuyRequestItem : renderVehicleItem}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           flexGrow: 1,
           paddingBottom: 100,
         }}
-        ListEmptyComponent={!loading && renderEmpty}
+        ListEmptyComponent={!loading && renderEmpty(activeTab)}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
 
-      {/* FLOAT BUTTON */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate("VehicleStep1")}
-      >
-        <Ionicons name="add" size={26} color={COLORS.black} />
-      </TouchableOpacity>
+      {/* FLOAT BUTTON - chỉ hiện ở tab Đăng ký xe */}
+      {activeTab === "register" && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => navigation.navigate("VehicleStep1")}
+        >
+          <Ionicons name="add" size={26} color={COLORS.black} />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }
