@@ -29,23 +29,19 @@ export default function ChatDetailScreen() {
   const navigation = useNavigation();
   const flatListRef = useRef(null);
   const { chatRoomId, roomName } = route.params;
-
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
-
-  // Edit states
   const [editingMessage, setEditingMessage] = useState(null);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState(null);
-
-  // Participants states
   const [participants, setParticipants] = useState([]);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [myFullName, setMyFullName] = useState("");
 
   useEffect(() => {
     const fetchProfile = async () => {
