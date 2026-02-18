@@ -7,6 +7,7 @@ import ProfileDetailScreen from "../screens/home/profile/profileDetail/ProfileDe
 import BuyRequest from "../screens/home/profile/registerVehicle/buyRequest/BuyRequest";
 import UtilitiesScreen from "../screens/home/profile/utilities/UtilitiesScreen";
 import ChatGroupScreen from "../screens/home/profile/utilities/chatGroup/chatGroup/ChatGroupScreen";
+import ChatGroupDetailScreen from "../screens/home/profile/utilities/chatGroup/chatGroupDetail/ChatGroupDetailScreen";
 import RegisterVehicleStackNavigator from "./RegisterVehicleStackNavigator";
 
 const Stack = createNativeStackNavigator();
@@ -36,6 +37,7 @@ export default function ProfileStack({ setIsLoggedIn, forceProfileUpdate, onProf
       <Stack.Screen name="MemberWallet" component={MemberWalletScreen} />
       <Stack.Screen name="Utilities" component={UtilitiesScreen} />
       <Stack.Screen name="ChatGroup" component={ChatGroupScreen} />
+        <Stack.Screen name="ChatDetail" component={ChatGroupDetailScreen} />
     </Stack.Navigator>
   );
 }
