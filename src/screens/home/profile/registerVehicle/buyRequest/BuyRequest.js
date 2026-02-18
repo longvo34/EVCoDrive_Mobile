@@ -2,11 +2,11 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 
 import EVLoading from "../../../../../components/animation/EVLoading";
@@ -14,12 +14,12 @@ import COLORS from "../../../../../constants/colors";
 import { getIncomingBuyRequests } from "../../../../../services/buyRequest/buyRequest.service";
 ;
 
-import styles from "./BuyRequest.styles"; // tạo file styles riêng
+import styles from "./BuyRequest.styles";
 
 export default function BuyRequestDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { buyRequestId } = route.params; // nhận từ navigation.navigate
+  const { buyRequestId } = route.params; 
 
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,11 +32,6 @@ export default function BuyRequestDetailScreen() {
     try {
       setLoading(true);
 
-      // Cách 1: Nếu bạn có API get by ID → dùng cái này (khuyến nghị)
-      // const res = await getBuyRequestById(buyRequestId);
-      // setRequest(res.data?.data);
-
-      // Cách 2: Tạm thời dùng incoming list để tìm (vì bạn chưa có API detail)
       const res = await getIncomingBuyRequests({ pageNumber: 1, pageSize: 20 });
       const items = res.data?.data?.items || [];
       const found = items.find((item) => item.buyRequestId === buyRequestId);
@@ -55,7 +50,7 @@ export default function BuyRequestDetailScreen() {
   };
 
   if (loading) {
-    return <EVLoading visible={true} />; // hoặc <ActivityIndicator />
+    return <EVLoading visible={true} />; 
   }
 
   if (!request) {

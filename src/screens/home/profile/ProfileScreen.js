@@ -112,16 +112,18 @@ export default function ProfileScreen({ setIsLoggedIn }) {
               onPress={() => navigation.navigate("Vehicle")}
             />
 
-            <MenuItem
-              icon={
-                <MaterialIcons
-                  name="local-offer"
-                  size={22}
-                  color={COLORS.text}
-                />
-              }
-              label="Xe đã niêm yết"
-            />
+      <MenuItem
+  icon={
+    <MaterialIcons
+      name="apps"
+      size={22}
+      color={COLORS.text}
+    />
+  }
+  label="Tiện ích"
+  onPress={() => navigation.navigate("Utilities")}
+/>
+
 
             <MenuItem
               icon={

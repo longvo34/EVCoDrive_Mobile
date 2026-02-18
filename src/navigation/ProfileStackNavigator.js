@@ -5,6 +5,8 @@ import EKYCScreen from "../screens/home/profile/ekyc/EKYCScreen";
 import MemberWalletScreen from "../screens/home/profile/memberWallet/MemberWalletScreen";
 import ProfileDetailScreen from "../screens/home/profile/profileDetail/ProfileDetailScreen";
 import BuyRequest from "../screens/home/profile/registerVehicle/buyRequest/BuyRequest";
+import UtilitiesScreen from "../screens/home/profile/utilities/UtilitiesScreen";
+import ChatGroupScreen from "../screens/home/profile/utilities/chatGroup/chatGroup/ChatGroupScreen";
 import RegisterVehicleStackNavigator from "./RegisterVehicleStackNavigator";
 
 const Stack = createNativeStackNavigator();
@@ -32,6 +34,8 @@ export default function ProfileStack({ setIsLoggedIn, forceProfileUpdate, onProf
         )}
       </Stack.Screen>
       <Stack.Screen name="MemberWallet" component={MemberWalletScreen} />
+      <Stack.Screen name="Utilities" component={UtilitiesScreen} />
+      <Stack.Screen name="ChatGroup" component={ChatGroupScreen} />
     </Stack.Navigator>
   );
 }
