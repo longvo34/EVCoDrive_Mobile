@@ -2,14 +2,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
 import {
-    FlatList,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import EVLoading from "../../../../../../components/animation/EVLoading";
@@ -17,10 +17,10 @@ import COLORS from "../../../../../../constants/colors";
 import styles from "./ChatGroupDetailScreen.styles";
 
 import {
-    getMessagesByRoomId,
-    getParticipantsByRoomId,
-    sendMessage,
-    updateMessage,
+  getMessagesByRoomId,
+  getParticipantsByRoomId,
+  sendMessage,
+  updateMessage,
 } from "../../../../../../services/chat/chat.service";
 import { getUserProfile } from "../../../../../../services/user/user.service";
 
@@ -29,27 +29,35 @@ export default function ChatDetailScreen() {
   const navigation = useNavigation();
   const flatListRef = useRef(null);
   const { chatRoomId, roomName } = route.params;
+
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [myFullName, setMyFullName] = useState(""); // ← Thêm để lưu tên thật của mình
   const [profileLoading, setProfileLoading] = useState(true);
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
+
+  // Edit states
   const [editingMessage, setEditingMessage] = useState(null);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState(null);
+
+  // Participants
   const [participants, setParticipants] = useState([]);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [participantsLoading, setParticipantsLoading] = useState(false);
-  const [myFullName, setMyFullName] = useState("");
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         setProfileLoading(true);
         const res = await getUserProfile();
-        const userId = res.data?.data?.id;
+        const userData = res.data?.data;
+        const userId = userData?.id;
         setCurrentUserId(userId);
+        setMyFullName(userData?.fullName || "Bạn"); // ← Lấy fullName thật
+        console.log("Tên của tôi:", userData?.fullName);
       } catch (error) {
         console.log("Lỗi lấy profile:", error);
       } finally {
@@ -90,6 +98,7 @@ export default function ChatDetailScreen() {
       const res = await getParticipantsByRoomId(chatRoomId);
       const data = res.data?.data || [];
       setParticipants(data);
+      console.log("Danh sách thành viên:", data);
     } catch (err) {
       console.log("Lỗi lấy thành viên:", err);
       setParticipants([]);
@@ -219,22 +228,34 @@ export default function ChatDetailScreen() {
     );
   };
 
-  const renderParticipant = ({ item }) => (
-    <View style={styles.participantItem}>
-      <Ionicons name="person-circle-outline" size={44} color={COLORS.softGreen} />
-      <View style={styles.participantInfo}>
-        <Text style={styles.participantName}>
-          {item.accountName || `User ${item.accountId.slice(0, 8)}`}
-        </Text>
-        <Text style={styles.participantRole}>
-          {item.role} • {item.status}
-        </Text>
-        <Text style={styles.joinedDate}>
-          Tham gia: {new Date(item.joinedDate).toLocaleDateString("vi-VN")}
-        </Text>
+  const renderParticipant = ({ item }) => {
+    // Ưu tiên tên thật nếu là mình, còn lại fallback
+    const displayName =
+      item.accountId === currentUserId
+        ? myFullName || "Bạn"
+        : item.accountName || `Thành viên ${item.accountId.slice(0, 8)}`;
+
+    console.log("Hiển thị tên:", displayName, "cho accountId:", item.accountId); // Debug
+
+    return (
+      <View style={styles.participantItem}>
+        <Ionicons
+          name="person-circle-outline"
+          size={44}
+          color={item.status === "Active" ? COLORS.softGreen : "gray"}
+        />
+        <View style={styles.participantInfo}>
+          <Text style={styles.participantName}>{displayName}</Text>
+          <Text style={styles.participantRole}>
+            {item.role} • {item.status}
+          </Text>
+          <Text style={styles.joinedDate}>
+            Tham gia: {new Date(item.joinedDate).toLocaleDateString("vi-VN")}
+          </Text>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   if (profileLoading) return <EVLoading visible />;
 
