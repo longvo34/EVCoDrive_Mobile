@@ -4,6 +4,10 @@ export const createContract = (data) => {
   return api.post("/contracts", data);
 };
 
+export const getContractById = (contractId) => {
+  return api.get(`/contracts/${contractId}`);
+};
+
 export const getContractPdf = (contractId) => {
   return api.get(`/contracts/${contractId}/pdf`, {
     responseType: "blob",
