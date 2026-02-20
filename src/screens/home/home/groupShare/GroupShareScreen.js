@@ -50,10 +50,8 @@ export default function GroupShareScreen() {
 
       const data = res.data.data;
 
-      // ✅ set shares
       setShares(data.availableShares || []);
 
-      // ✅ gọi thêm API vehicle
       if (data.vehicleId) {
         const vehicleRes = await getVehicleById(data.vehicleId);
 
@@ -91,21 +89,21 @@ export default function GroupShareScreen() {
         onPress={() => toggleSelect(item.shareUnitId)}
         activeOpacity={0.8}
       >
-       <View>
-  <Text style={styles.shareTitle}>
-    Cổ phần {item.displayNumber}
-  </Text>
+        <View>
+          <Text style={styles.shareTitle}>
+            Cổ phần {item.displayNumber}
+          </Text>
 
-  <Text style={styles.text}>
-    Ngày bán: {item.listedDate
-      ? new Date(item.listedDate).toLocaleDateString("vi-VN")
-      : ""}
-  </Text>
+          <Text style={styles.text}>
+            Ngày bán: {item.listedDate
+              ? new Date(item.listedDate).toLocaleDateString("vi-VN")
+              : ""}
+          </Text>
 
-  <Text style={styles.price}>
-    {item.price?.toLocaleString()} {item.currency}
-  </Text>
-</View>
+          <Text style={styles.price}>
+            {item.price?.toLocaleString()} {item.currency}
+          </Text>
+        </View>
 
         <View
           style={{
@@ -130,58 +128,74 @@ export default function GroupShareScreen() {
     return <EVLoading visible={true} />;
   }
 
-const handleBuy = async () => {
-  try {
-    setLoading(true);
+  const handleBuy = async () => {
+    try {
+      setLoading(true);
 
-    if (selectedShares.length === 0) return;
+      console.log("selectedShares:", selectedShares);
+      console.log("shares:", shares);
 
-    const firstShare = shares.find(
-      (s) => s.shareUnitId === selectedShares[0]
-    );
+      if (selectedShares.length === 0) {
+        Alert.alert("Thông báo", "Vui lòng chọn cổ phần");
+        return;
+      }
 
-    const payload = {
-      sellRequestId: firstShare.sellRequestId,
-      shareUnitIds: selectedShares,
-    };
+      const firstShare = shares.find(
+        (s) => String(s.shareUnitId) === String(selectedShares[0])
+      );
 
-    await createBuyRequest(payload);
+      console.log("firstShare:", firstShare);
 
-    Alert.alert("Thành công", "Tạo yêu cầu mua thành công");
+      if (!firstShare) {
+        Alert.alert("Lỗi", "Không tìm thấy thông tin cổ phần.");
+        return;
+      }
 
-    setSelectedShares([]);
+      const payload = {
+        sellRequestId: firstShare.sellRequestId,
+        shareUnitIds: selectedShares,
+      };
 
-    fetchShares();
+      console.log("Payload gửi createBuyRequest:", payload);
 
-  } catch (err) {
-  const errorData = err?.response?.data;
+      const res = await createBuyRequest(payload);
+      console.log("Response từ createBuyRequest:", res);
+      console.log("Response data chi tiết:", res.data);
+      console.log("Response data.data:", res.data?.data);
+      const buyRequestId = res.data?.data?.buyRequestId;
 
-  console.log("BUY ERROR:", errorData || err);
+      if (!buyRequestId) {
+        throw new Error("Không lấy được buyRequestId từ response");
+      }
+      const contractId = res.data?.data?.contractId
+        || res.data?.data?.contract?.id
+        || res.data?.data?.contractIdFromBE;
 
-  if (errorData?.errorCode === "VAL_3003") {
-    Alert.alert(
-      "Cổ phần đã hết hạn",
-      "Đợt bán cổ phần này đã hết hạn. Vui lòng chọn cổ phần khác."
-    );
 
-    fetchShares();
-  } else {
-    Alert.alert(
-      "Lỗi",
-      errorData?.message || "Không thể tạo yêu cầu mua"
-    );
-  }
-}finally {
-    setLoading(false);
-  }
-};
+      console.log("Đang navigate sang BuySellContract với params:");
+      console.log("→ buyRequestId:", buyRequestId);
+      console.log("→ contractId:", contractId || "KHÔNG CÓ (backend chưa trả)");
+      if (!contractId) {
+        console.warn("Cảnh báo: Backend chưa trả contractId trong response. Cần sửa BE để trả thêm contractId.");
+      }
 
+      navigation.navigate("BuySellContract", {
+        buyRequestId,
+        contractId,
+      });
+
+    } catch (err) {
+      const errorData = err?.response?.data;
+      console.log("BUY ERROR:", errorData || err);
+      console.log("Error chi tiết:", err.message, err.stack);
+      Alert.alert("Lỗi", "Tạo yêu cầu mua thất bại. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-
-
     <SafeAreaView style={[styles.safe, { flex: 1 }]}>
-
       <View
         style={{
           flexDirection: "row",
@@ -289,16 +303,16 @@ const handleBuy = async () => {
               borderRadius: 12,
               alignItems: "center",
             }}
-           onPress={() =>
-  Alert.alert(
-    "Xác nhận",
-    `Bạn muốn mua ${selectedShares.length} cổ phần?`,
-    [
-      { text: "Huỷ", style: "cancel" },
-      { text: "Mua", onPress: handleBuy }
-    ]
-  )
-}
+            onPress={() =>
+              Alert.alert(
+                "Xác nhận",
+                `Bạn muốn mua ${selectedShares.length} cổ phần?`,
+                [
+                  { text: "Huỷ", style: "cancel" },
+                  { text: "Mua", onPress: handleBuy }
+                ]
+              )
+            }
           >
             <Text style={{ fontWeight: "bold" }}>
               Mua {selectedShares.length} cổ phần
