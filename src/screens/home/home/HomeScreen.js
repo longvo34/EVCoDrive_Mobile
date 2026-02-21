@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons"; // ← thêm import này nếu chưa có
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import {
@@ -5,81 +6,90 @@ import {
   Image,
   ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
 import EVLoading from "../../../components/animation/EVLoading";
 import { getMyProfile } from "../../../services/auth/auth.service";
 import { getGroupsWithAvailableShares } from "../../../services/coOwnerGroup/coOwnerGroup.service";
 import { getVehicleById } from "../../../services/vehicle/vehicle.service";
 import styles from "./HomeScreen.styles";
 
-
 export default function HomeScreen() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [groups, setGroups] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigation = useNavigation();
 
-
   useFocusEffect(
-  useCallback(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+    useCallback(() => {
+      const fetchData = async () => {
+        try {
+          setLoading(true);
 
-        const profileRes = await getMyProfile();
-        if (!profileRes.data?.isSuccess) {
-          throw new Error(profileRes.data?.message || "Get profile failed");
+          const profileRes = await getMyProfile();
+          if (!profileRes.data?.isSuccess) {
+            throw new Error(profileRes.data?.message || "Get profile failed");
+          }
+          setUser(profileRes.data.data);
+
+          const groupRes = await getGroupsWithAvailableShares();
+          if (!groupRes.data?.isSuccess) {
+            throw new Error(groupRes.data?.message || "Get groups failed");
+          }
+
+          const groupsData = groupRes.data.data;
+
+          const groupsWithImages = await Promise.all(
+            groupsData.map(async (group) => {
+              try {
+                const vehicleRes = await getVehicleById(group.vehicleId);
+                const vehicle = vehicleRes.data.data;
+
+                return {
+                  ...group,
+                  imageUrl: vehicle.images?.[0]?.secureUrl || null,
+                };
+              } catch {
+                return { ...group, imageUrl: null };
+              }
+            })
+          );
+
+          setGroups(groupsWithImages);
+        } catch (err) {
+          console.log("HOME ERROR:", err);
+          Alert.alert("Lỗi", "Không tải được dữ liệu");
+        } finally {
+          setLoading(false);
         }
-        setUser(profileRes.data.data);
+      };
 
-        const groupRes = await getGroupsWithAvailableShares();
-        if (!groupRes.data?.isSuccess) {
-          throw new Error(groupRes.data?.message || "Get groups failed");
-        }
+      fetchData();
+    }, [])
+  );
 
-        const groupsData = groupRes.data.data;
+  // Lọc theo biển số
+  const filteredGroups = groups.filter((group) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase().trim();
+    const plate = (group.licensePlate || "").toLowerCase().trim();
+    return plate.includes(query);
+  });
 
-        const groupsWithImages = await Promise.all(
-          groupsData.map(async (group) => {
-            try {
-              const vehicleRes = await getVehicleById(group.vehicleId);
-              const vehicle = vehicleRes.data.data;
-
-              return {
-                ...group,
-                imageUrl: vehicle.images?.[0]?.secureUrl || null,
-              };
-            } catch {
-              return { ...group, imageUrl: null };
-            }
-          })
-        );
-
-        setGroups(groupsWithImages);
-      } catch (err) {
-        console.log("HOME ERROR:", err);
-        Alert.alert("Lỗi", "Không tải được dữ liệu");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [])
-);
-
+  const clearSearch = () => setSearchQuery("");
 
   if (loading) {
-  return (
-    <SafeAreaView style={styles.safe}>
-      <EVLoading />
-    </SafeAreaView>
-  );
-}
-
+    return (
+      <SafeAreaView style={styles.safe}>
+        <EVLoading />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -104,85 +114,94 @@ export default function HomeScreen() {
         </View>
       </View>
 
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Tìm theo biển số xe..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          returnKeyType="search"
+          placeholderTextColor="#aaa"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+            <Ionicons name="close-circle" size={22} color="#888" />
+          </TouchableOpacity>
+        )}
+      </View>
+
       {/* Content */}
-      <ScrollView
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.welcome}>Marketplace</Text>
         <Text style={styles.subtitle}>
           Các xe đang có cổ phần bán
         </Text>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        >
-          {groups.map((group) => (
-            <TouchableOpacity
-              key={group.coOwnerGroupId}
-              style={styles.carCard}
-              activeOpacity={0.8}
-              onPress={() =>
-                navigation.navigate("GroupShare", {
-                  groupId: group.coOwnerGroupId,
-  vehicleId: group.vehicleId,
-  vehicleBrand: group.vehicleBrand,
-  vehicleModel: group.vehicleModel,
-  licensePlate: group.licensePlate,
-  imageUrl: group.imageUrl,
-                })
-              }
-            >
+        {filteredGroups.length === 0 && searchQuery.trim() ? (
+          <View style={styles.emptySearch}>
+            <Ionicons name="search-outline" size={48} color="#aaa" />
+            <Text style={styles.emptySearchText}>Không tìm thấy xe nào</Text>
+            <Text style={styles.emptySearchSubText}>
+              Không có biển số chứa "{searchQuery.trim()}"
+            </Text>
+          </View>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {filteredGroups.map((group) => (
+              <TouchableOpacity
+                key={group.coOwnerGroupId}
+                style={styles.carCard}
+                activeOpacity={0.8}
+                onPress={() =>
+                  navigation.navigate("GroupShare", {
+                    groupId: group.coOwnerGroupId,
+                    vehicleId: group.vehicleId,
+                    vehicleBrand: group.vehicleBrand,
+                    vehicleModel: group.vehicleModel,
+                    licensePlate: group.licensePlate,
+                    imageUrl: group.imageUrl,
+                  })
+                }
+              >
+                <Image
+                  source={{
+                    uri: group.imageUrl || "https://picsum.photos/300/200",
+                  }}
+                  style={styles.carImage}
+                />
 
-              <Image
-                source={{
-                  uri:
-                    group.imageUrl ||
-                    "https://picsum.photos/300/200",
-                }}
-                style={styles.carImage}
-              />
+                <View style={styles.carFooter}>
+                  <View>
+                    <Text style={styles.carName}>
+                      {group.vehicleBrand} {group.vehicleModel}
+                    </Text>
 
-              <View style={styles.carFooter}>
-                <View>
-                  <Text style={styles.carName}>
-                    {group.vehicleBrand}{" "}
-                    {group.vehicleModel}
-                  </Text>
+                    <Text style={{ fontSize: 12 }}>
+                      Biển số: {group.licensePlate || "Chưa có"}
+                    </Text>
 
-                  <Text style={{ fontSize: 12 }}>
-                    Biển số: {group.licensePlate}
-                  </Text>
+                    <Text style={{ fontSize: 12 }}>
+                      Đang bán: {group.totalSharesForSale} gói đầu tư
+                    </Text>
 
-                  <Text style={{ fontSize: 12 }}>
-                    Đang bán:{" "}
-                    {group.totalSharesForSale} gói đầu tư
-                  </Text>
+                    <Text style={{ fontSize: 12, fontWeight: "bold" }}>
+                      Giá: {group.highestPricePerShare?.toLocaleString()} VND
+                    </Text>
+                  </View>
 
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Giá:{" "}
-
-                    {group.highestPricePerShare?.toLocaleString()}{" "}
-                    VND
-                  </Text>
+                  <View style={styles.arrowCircle}>
+                    <Text style={styles.arrow}>↗</Text>
+                  </View>
                 </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
 
-                <View style={styles.arrowCircle}>
-                  <Text style={styles.arrow}>↗</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-
-          ))}
-        </ScrollView>
-
-        <View style={{ height: 20 }} />
+        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );

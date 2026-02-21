@@ -103,4 +103,52 @@ carFooter: {
     fontSize: 18,
     fontWeight: 'bold',
   },
+
+  searchContainer: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#f5f5f5",
+  borderRadius: 12,
+  marginHorizontal: 16,
+  marginVertical: 12,
+  paddingHorizontal: 12,
+  height: 48,
+  borderWidth: 1,
+  borderColor: "#e0e0e0",
+},
+
+searchIcon: {
+  marginRight: 8,
+},
+
+searchInput: {
+  flex: 1,
+  fontSize: 16,
+  color: "#333",
+},
+
+clearButton: {
+  padding: 4,
+},
+
+emptySearch: {
+  alignItems: "center",
+  justifyContent: "center",
+  paddingVertical: 60,
+},
+
+emptySearchText: {
+  fontSize: 18,
+  fontWeight: "600",
+  color: "#555",
+  marginTop: 16,
+},
+
+emptySearchSubText: {
+  fontSize: 14,
+  color: "#888",
+  marginTop: 8,
+  textAlign: "center",
+},
+
 });
