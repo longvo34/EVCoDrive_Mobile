@@ -10,8 +10,8 @@ import {
 } from "react-native";
 import EVLoading from "../../../../components/animation/EVLoading";
 import {
-  deleteBuyRequest // ← đã thêm import hàm delete
-  ,
+  deleteBuyRequest,
+
 
   getBuyRequestById
 } from "../../../../services/buyRequest/buyRequest.service";
@@ -60,7 +60,7 @@ export default function BuyRequestDetailScreen({ route }) {
               setLoading(true);
               await deleteBuyRequest(buyRequestId);
               Alert.alert("Thành công", "Yêu cầu mua đã được hủy thành công.");
-              navigation.goBack(); // Quay về màn hình trước (thường là danh sách)
+              navigation.goBack();
             } catch (error) {
               Alert.alert(
                 "Lỗi",
@@ -92,7 +92,6 @@ export default function BuyRequestDetailScreen({ route }) {
     }
   };
 
-  // Danh sách trạng thái cho phép hiển thị nút hủy (bạn có thể chỉnh lại theo logic thực tế)
   const canCancel = data && 
     ["Pending", "Processing", "Proccessing", "ReadyForInspection", "SigningContract", "Rejected"].includes(data.status);
 
@@ -154,12 +153,8 @@ export default function BuyRequestDetailScreen({ route }) {
             </Text>
           </View>
         ))}
-
-        {/* Khoảng trống dưới cùng để nút hủy không bị dính sát nội dung */}
         <View style={{ height: 100 }} />
       </ScrollView>
-
-      {/* Nút Hủy yêu cầu - đặt ở dưới cùng */}
       {canCancel && (
         <View style={{ paddingHorizontal: 16, paddingVertical: 16, backgroundColor: styles.container.backgroundColor || '#fff' }}>
           <TouchableOpacity
