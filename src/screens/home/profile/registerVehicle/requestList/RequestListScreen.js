@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { TextInput } from "react-native";
 import EVLoading from "../../../../../components/animation/EVLoading";
 import COLORS from "../../../../../constants/colors";
 import { getIncomingBuyRequests } from "../../../../../services/buyRequest/buyRequest.service";
@@ -24,7 +25,6 @@ import {
 import {
   getVehicleModels
 } from "../../../../../services/vehicleModel/vehicleModel.service";
-
 import styles from "./RequestListScreen.styles";
 
 export default function RequestListScreen({ navigation }) {
@@ -34,7 +34,8 @@ export default function RequestListScreen({ navigation }) {
   const [incomingRequests, setIncomingRequests] = useState([]); 
   const [brands, setBrands] = useState([]);
   const [models, setModels] = useState([]);
-  const [activeTab, setActiveTab] = useState("register");     
+  const [activeTab, setActiveTab] = useState("register");    
+  const [searchQuery, setSearchQuery] = useState(""); 
 
   useEffect(() => {
     fetchInitialData();
@@ -46,6 +47,42 @@ export default function RequestListScreen({ navigation }) {
     });
     return unsubscribe;
   }, [navigation]);
+
+  const filteredVehicles = vehicles.filter(vehicle => {
+  if (!searchQuery.trim()) return true;
+  const query = searchQuery.toLowerCase().trim();
+  const plate = (vehicle.licensePlate || "").toLowerCase().trim();
+  return plate.includes(query);
+});
+
+const filteredIncomingRequests = incomingRequests.filter(req => {
+  if (!searchQuery.trim()) return true;
+  const query = searchQuery.toLowerCase().trim();
+  const plate = (req.vehicleLicensePlate || "").toLowerCase().trim();
+  return plate.includes(query);
+});
+
+const clearSearch = () => {
+  setSearchQuery("");
+};
+
+const renderEmptySearchOrDefault = () => {
+  const isSearching = searchQuery.trim().length > 0;
+  const currentData = activeTab === "buy" ? filteredIncomingRequests : filteredVehicles;
+
+  if (currentData.length === 0 && isSearching) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Ionicons name="search-outline" size={64} color={COLORS.gray} />
+        <Text style={styles.emptyTitle}>Không tìm thấy kết quả</Text>
+        <Text style={styles.emptyDesc}>
+          Không có biển số nào chứa "{searchQuery.trim()}"
+        </Text>
+      </View>
+    );
+  }
+  return renderEmpty(activeTab);
+};
 
   const fetchInitialData = async (tab = activeTab) => {
     try {
@@ -310,7 +347,7 @@ const renderBuyRequestItem = ({ item }) => (
       Số lượng cổ phần yêu cầu: {item.quantity || 1}
     </Text>
 
-    {/* Cổ phần chi tiết (nếu muốn hiển thị thêm) */}
+    {/* Cổ phần chi tiết  */}
     {item.requestedShares?.length > 0 && (
       <View style={{ marginTop: 12 }}>
         <Text style={{ fontSize: 13, fontWeight: "600", color: COLORS.text }}>
@@ -377,9 +414,28 @@ const renderBuyRequestItem = ({ item }) => (
         </TouchableOpacity>
       </View>
 
-      {/* LIST */}
+     {/* SEARCH BAR */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color={COLORS.gray} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Tìm theo biển số xe..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          returnKeyType="search"
+          placeholderTextColor={COLORS.gray}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+            <Ionicons name="close-circle" size={20} color={COLORS.gray} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* LIST  */}
       <FlatList
-        data={activeTab === "buy" ? incomingRequests : vehicles}
+        data={activeTab === "buy" ? filteredIncomingRequests : filteredVehicles}
         keyExtractor={(item) => 
           activeTab === "buy" ? item.buyRequestId : item.vehicleId
         }
@@ -389,13 +445,13 @@ const renderBuyRequestItem = ({ item }) => (
           flexGrow: 1,
           paddingBottom: 100,
         }}
-        ListEmptyComponent={!loading && renderEmpty(activeTab)}
+        ListEmptyComponent={!loading && renderEmptySearchOrDefault()}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
 
-      {/* FLOAT BUTTON - chỉ hiện ở tab Đăng ký xe */}
+      {/* FLOAT BUTTON*/}
       {activeTab === "register" && (
         <TouchableOpacity
           style={styles.fab}

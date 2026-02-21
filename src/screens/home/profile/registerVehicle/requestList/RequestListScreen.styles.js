@@ -2,7 +2,6 @@ import { StyleSheet } from "react-native";
 import COLORS from "../../../../../constants/colors";
 
 export default StyleSheet.create({
-  // === Style chung ===
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
@@ -41,7 +40,7 @@ export default StyleSheet.create({
   },
 
   activeTab: {
-    backgroundColor: COLORS.primary, // vàng #FFD600
+    backgroundColor: COLORS.primary, 
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
@@ -59,8 +58,7 @@ export default StyleSheet.create({
     color: COLORS.black,
   },
 
-  // === Style giữ nguyên cho tab "Đăng ký xe" (bạn yêu cầu giữ nguyên) ===
-  card: {  // card cho xe đăng ký
+  card: {  
     backgroundColor: COLORS.white,
     borderRadius: 16,
     padding: 14,
@@ -91,7 +89,7 @@ export default StyleSheet.create({
     color: "#3A7AFE",
   },
 
-  status: {  // badge status xe cũ
+  status: {  
     fontSize: 11,
     fontWeight: "600",
     paddingHorizontal: 10,
@@ -145,8 +143,7 @@ export default StyleSheet.create({
     gap: 10,
   },
 
-  // === Style mới cho tab "Yêu cầu mua" (giống hình) ===
-  buyCard: {  // card riêng cho yêu cầu mua
+  buyCard: {  
     backgroundColor: COLORS.white,
     borderRadius: 20,
     padding: 20,
@@ -178,14 +175,14 @@ export default StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: "#fffbeb", // vàng nhạt giống hình
+    backgroundColor: "#fffbeb", 
     alignSelf: "flex-start",
   },
 
   buyStatusText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#d97706", // cam vàng đậm
+    color: "#d97706", 
   },
 
   infoRow: {
@@ -238,7 +235,6 @@ export default StyleSheet.create({
     marginTop: 6,
   },
 
-  // Empty state chung (có thể dùng cho cả hai tab)
   emptyContainer: {
     flex: 1,
     alignItems: "center",
@@ -266,7 +262,7 @@ export default StyleSheet.create({
     lineHeight: 22,
   },
 
-  // FAB (chỉ dùng cho tab Đăng ký xe)
+
   fab: {
     position: "absolute",
     bottom: 24,
@@ -283,4 +279,32 @@ export default StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
+
+  searchContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: COLORS.lightGray || '#f5f5f5',
+  borderRadius: 12,
+  marginHorizontal: 16,
+  marginVertical: 12,
+  paddingHorizontal: 12,
+  height: 48,
+  borderWidth: 1,
+  borderColor: COLORS.border || '#e5e7eb',
+},
+
+searchIcon: {
+  marginRight: 8,
+},
+
+searchInput: {
+  flex: 1,
+  fontSize: 16,
+  color: COLORS.text,
+},
+
+clearButton: {
+  padding: 4,
+},
+
 });
