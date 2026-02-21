@@ -5,20 +5,19 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-
+import EVLoading from "../../../../../components/animation/EVLoading";
 import {
-    getContractById,
-    sendContractVerification,
-    verifyContractSignature,
+  getContractById,
+  sendContractVerification,
+  verifyContractSignature,
 } from "../../../../../services/contract/contract.service";
-
 import { getAccessToken } from "../../../../../utils/authStorage";
 import styles from "./BuySellContractScreen.styles";
 
@@ -29,9 +28,8 @@ export default function BuySellContractScreen() {
 
   const [contract, setContract] = useState(null);
   const [otp, setOtp] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); 
 
- 
   useEffect(() => {
     console.log("BuySellContractScreen params nhận được:");
     console.log("→ buyRequestId:", buyRequestId || "KHÔNG CÓ");
@@ -50,12 +48,14 @@ export default function BuySellContractScreen() {
         "Thông báo",
         "Không tìm thấy thông tin hợp đồng. Vui lòng liên hệ hỗ trợ hoặc thử lại."
       );
+      setLoading(false); 
+    } else {
+      setLoading(false); 
     }
   }, [contractId, buyRequestId]);
 
   const loadContractById = async (id) => {
     try {
-      setLoading(true);
       console.log(`Đang load contract bằng ID: ${id}`);
 
       const res = await getContractById(id);
@@ -109,7 +109,6 @@ export default function BuySellContractScreen() {
     }
   };
 
-  
   const handleSendOtp = async () => {
     if (!contract?.contractId) {
       Alert.alert("Thông báo", "Chưa có hợp đồng để gửi OTP");
@@ -118,47 +117,46 @@ export default function BuySellContractScreen() {
 
     try {
       await sendContractVerification(contract.contractId);
-      Alert.alert("OTP", "Mã OTP đã được gửi đến emailcủa bạn");
+      Alert.alert("OTP", "Mã OTP đã được gửi đến email của bạn");
     } catch (err) {
       console.error("SEND OTP ERROR:", err);
       Alert.alert("Lỗi", "Không gửi được OTP. Vui lòng thử lại.");
     }
   };
 
-  
- const handleVerifyOtp = async () => {
-  if (!otp) {
-    Alert.alert("Thiếu OTP", "Vui lòng nhập mã OTP");
-    return;
-  }
+  const handleVerifyOtp = async () => {
+    if (!otp) {
+      Alert.alert("Thiếu OTP", "Vui lòng nhập mã OTP");
+      return;
+    }
 
-  if (!contract?.contractId) {
-    Alert.alert("Lỗi", "Không có thông tin hợp đồng để xác nhận");
-    return;
-  }
+    if (!contract?.contractId) {
+      Alert.alert("Lỗi", "Không có thông tin hợp đồng để xác nhận");
+      return;
+    }
 
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    await verifyContractSignature(contract.contractId, otp);
+      await verifyContractSignature(contract.contractId, otp);
 
-    Alert.alert("Thành công", "Hợp đồng đã ký thành công!", [
-      {
-        text: "OK",
-        onPress: () => {
-  navigation.navigate("History");  
-}
-      },
-    ]);
-  } catch (err) {
-    Alert.alert(
-      "Lỗi",
-      err.response?.data?.message || "Ký hợp đồng thất bại. OTP sai hoặc hết hạn."
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+      Alert.alert("Thành công", "Hợp đồng đã ký thành công!", [
+        {
+          text: "OK",
+          onPress: () => {
+            navigation.navigate("History");  
+          }
+        },
+      ]);
+    } catch (err) {
+      Alert.alert(
+        "Lỗi",
+        err.response?.data?.message || "Ký hợp đồng thất bại. OTP sai hoặc hết hạn."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /* ================= UI ================= */
   if (!buyRequestId && !contractId) {
@@ -172,13 +170,17 @@ export default function BuySellContractScreen() {
   }
 
   const formatDate = (dateString) => {
-  if (!dateString) return "—";
-  const date = new Date(dateString);
-  return date.toLocaleString("vi-VN");
-};
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleString("vi-VN");
+  };
 
   return (
     <View style={styles.container}>
+      
+      {/* Loading overlay full màn hình - hiển thị khi loading = true */}
+      <EVLoading visible={loading} />
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#000" />
@@ -191,40 +193,39 @@ export default function BuySellContractScreen() {
       {!loading && contract && (
         <View style={styles.section}>
           <View style={styles.contractCard}>
-  <Text style={styles.contractTitle}>
-    {contract.contractTypeName}
-  </Text>
+            <Text style={styles.contractTitle}>
+              {contract.contractTypeName}
+            </Text>
 
-  <View style={styles.infoRow}>
-    <Text style={styles.label}>Số hợp đồng:</Text>
-    <Text style={styles.value}>{contract.contractNumber}</Text>
-  </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Số hợp đồng:</Text>
+              <Text style={styles.value}>{contract.contractNumber}</Text>
+            </View>
 
-  <View style={styles.infoRow}>
-    <Text style={styles.label}>Trạng thái:</Text>
-    <Text
-      style={[
-        styles.status,
-        contract.contractStatuses === "Draft" && styles.statusDraft,
-        contract.contractStatuses === "Completed" && styles.statusDone,
-      ]}
-    >
-      {contract.contractStatuses === "Draft"
-        ? "Chờ ký"
-        : contract.contractStatuses === "Completed"
-        ? "Đã hoàn tất"
-        : contract.contractStatuses}
-    </Text>
-  </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Trạng thái:</Text>
+              <Text
+                style={[
+                  styles.status,
+                  contract.contractStatuses === "Draft" && styles.statusDraft,
+                  contract.contractStatuses === "Completed" && styles.statusDone,
+                ]}
+              >
+                {contract.contractStatuses === "Draft"
+                  ? "Chờ ký"
+                  : contract.contractStatuses === "Completed"
+                  ? "Đã hoàn tất"
+                  : contract.contractStatuses}
+              </Text>
+            </View>
 
-
-  <View style={styles.infoRow}>
-    <Text style={styles.label}>Ngày ký:</Text>
-    <Text style={styles.value}>
-      {formatDate(contract.signedDate)}
-    </Text>
-  </View>
-</View>
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Ngày ký:</Text>
+              <Text style={styles.value}>
+                {formatDate(contract.signedDate)}
+              </Text>
+            </View>
+          </View>
 
           <TouchableOpacity
             style={styles.secondaryButton}

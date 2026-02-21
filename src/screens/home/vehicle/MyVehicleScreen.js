@@ -1,5 +1,5 @@
-import { useNavigation } from "@react-navigation/native";
-import { useEffect, useMemo, useState } from "react";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
   RefreshControl,
@@ -46,16 +46,13 @@ export default function MyVehicleScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", () => {
-      fetchData();
-    });
-
+  useFocusEffect(
+  useCallback(() => {
     fetchData();
-
-    return unsubscribe;
-  }, [navigation]);
+  }, [])
+);
 
   const fetchData = async () => {
     console.log("🔥 fetchData CALLED");
@@ -73,7 +70,9 @@ export default function MyVehicleScreen() {
       Array.isArray(res?.data?.data?.items)
     );
 
-    const rawData = res?.data?.data?.items || [];
+    const rawData = (res?.data?.data?.items || []).filter(
+  (item) => item.status !== "Cancelled"
+);
 
     console.log("rawData:", rawData);
     console.log("Is rawData array:", Array.isArray(rawData));

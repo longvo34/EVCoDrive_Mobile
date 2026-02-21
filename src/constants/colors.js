@@ -7,7 +7,7 @@ const COLORS = {
   text: "#111111",
   signingGreen: "#33FF00",
    softGreen: "#10b981",       
-  
+  cancel: "#ef4444",
 };
 
 export default COLORS;
