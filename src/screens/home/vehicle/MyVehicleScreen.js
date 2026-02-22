@@ -1,15 +1,15 @@
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useCallback, useMemo, useState } from "react";
 import {
-    FlatList,
-    RefreshControl,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  RefreshControl,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import EVLoading from "../../../components/animation/EVLoading";
-import { getMySellRequests } from "../../../services/sellRequest/sellRequest.service";
+import { getMyCoOwnerGroups } from "../../../services/coOwnerGroup/coOwnerGroup.service";
 import styles from "./MyVehicleScreen.styles";
 
 const searchStyles = {
@@ -56,83 +56,64 @@ export default function MyVehicleScreen() {
 
   const fetchData = async () => {
     console.log("🔥 fetchData CALLED");
-  try {
-    setLoading(true);
-    console.log("🚀 Calling getMySellRequests...");
-    const res = await getMySellRequests();
+    try {
+      setLoading(true);
+      console.log("🚀 Calling getMyCoOwnerGroups...");
+      const res = await getMyCoOwnerGroups();
 
-    console.log("Full response:", res);
-    console.log("res.data:", res?.data);
-    console.log("res.data.data:", res?.data?.data);
-    console.log("res.data.data.items:", res?.data?.data?.items);
-    console.log(
-      "Is items array:",
-      Array.isArray(res?.data?.data?.items)
-    );
+      console.log("Full response:", res);
+      console.log("res.data:", res?.data);
+      console.log("res.data.data:", res?.data?.data);
 
-    const rawData = (res?.data?.data?.items || []).filter(
-  (item) => item.status !== "Cancelled"
-);
+      const rawData = (res?.data?.data || []).filter(
+        (item) => item.coOwnerGroupStatus !== "Inactive"
+      );
 
-    console.log("rawData:", rawData);
-    console.log("Is rawData array:", Array.isArray(rawData));
+      console.log("rawData:", rawData);
+      console.log("Is rawData array:", Array.isArray(rawData));
 
-    console.log("STATUS_ORDER:", STATUS_ORDER);
-    console.log("Is STATUS_ORDER array:", Array.isArray(STATUS_ORDER));
+      const STATUS_ORDER = ["Active", "Pending", "Inactive"];
+      console.log("STATUS_ORDER:", STATUS_ORDER);
 
-    const sorted = Array.isArray(rawData)
-      ? [...rawData].sort((a, b) => {
-          const priA = STATUS_ORDER?.indexOf?.(a.status) ?? 999;
-          const priB = STATUS_ORDER?.indexOf?.(b.status) ?? 999;
+      const sorted = Array.isArray(rawData)
+        ? [...rawData].sort((a, b) => {
+            const priA = STATUS_ORDER?.indexOf?.(a.coOwnerGroupStatus) ?? 999;
+            const priB = STATUS_ORDER?.indexOf?.(b.coOwnerGroupStatus) ?? 999;
 
-          if (priA !== priB) return priA - priB;
+            if (priA !== priB) return priA - priB;
 
-          return (
-            new Date(b.createdDate).getTime() -
-            new Date(a.createdDate).getTime()
-          );
-        })
-      : [];
+            return (
+              new Date(b.createdDate).getTime() -
+              new Date(a.createdDate).getTime()
+            );
+          })
+        : [];
 
-    setData(sorted);
-    setFilteredData(sorted);
-  }  catch (error) {
-  console.log("=========== AXIOS ERROR START ===========");
+      setData(sorted);
+      setFilteredData(sorted);
+    } catch (error) {
+      console.log("=========== AXIOS ERROR START ===========");
 
-  // URL + method
-  console.log("FULL URL:", error.config?.baseURL + error.config?.url);
-  console.log("METHOD:", error.config?.method);
+      console.log("FULL URL:", error.config?.baseURL + error.config?.url);
+      console.log("METHOD:", error.config?.method);
+      console.log("REQUEST HEADERS:", error.config?.headers);
+      console.log("REQUEST PARAMS:", error.config?.params);
+      console.log("REQUEST DATA:", error.config?.data);
+      console.log("STATUS:", error.response?.status);
+      console.log(
+        "RESPONSE DATA:",
+        JSON.stringify(error.response?.data, null, 2)
+      );
+      console.log("ERROR CODE:", error.response?.data?.errorCode);
+      console.log("MESSAGE:", error.response?.data?.message);
 
-  // Header gửi lên
-  console.log("REQUEST HEADERS:", error.config?.headers);
+      console.log("=========== AXIOS ERROR END ===========");
 
-  // Param nếu có
-  console.log("REQUEST PARAMS:", error.config?.params);
-
-  // Body nếu có
-  console.log("RA:", error.config?.data);
-
-  // Status
-  console.log("STATUS:", error.response?.status);
-
-  // Data backend trả về (quan trọng nhất)
-  console.log(
-    "RESPONSE DATA:",
-    JSON.stringify(error.response?.data, null, 2)
-  );
-
-  // Error code nếu backend có
-  console.log("ERROR CODE:", error.response?.data?.errorCode);
-  console.log("MESSAGE:", error.response?.data?.message);
-
-  console.log("=========== AXIOS ERROR END ===========");
-
-  console.error("Lỗi fetch yêu cầu bán:", error);
-}
-finally {
-    setLoading(false);
-  }
-};
+      console.error("Lỗi fetch nhóm sở hữu chung:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 
@@ -150,9 +131,9 @@ finally {
     const lowerQuery = searchQuery.toLowerCase().trim();
 
     const filtered = data.filter((item) => {
-      const brandModel = `${item.vehicleBrand || ""} ${item.vehicleModel || ""}`.toLowerCase();
-      const plate = item.licensePlate?.toLowerCase() || "";
-      return brandModel.includes(lowerQuery) || plate.includes(lowerQuery);
+      const name = item.name?.toLowerCase() || "";
+      const description = item.description?.toLowerCase() || "";
+      return name.includes(lowerQuery) || description.includes(lowerQuery);
     });
 
     setFilteredData(filtered);
@@ -168,109 +149,100 @@ finally {
   ];
 
   const STATUS_MAP = {
-    Published: {
-      text: "Đang bán",
+    Active: {
+      text: "Hoạt động",
       badge: styles.badgePublished,
       textStyle: styles.textPublished,
     },
-    PartialSold: {
-      text: "Bán một phần",
-      badge: styles.badgePending,
+    Pending: {
+      text: "Chờ phê duyệt",
+      badge: styles.badgePartial,
       textStyle: styles.textPending,
     },
-    Ended: {
-      text: "Đã kết thúc",
+    Inactive: {
+      text: "Không hoạt động",
       badge: styles.badgeRejected,
       textStyle: styles.textRejected,
     },
-    Completed: {
-      text: "Hoàn tất",
-      badge: styles.badgePublished,
-      textStyle: styles.textPublished,
-    },
-    Expired: {
-      text: "Hết hạn",
-      badge: styles.badgeRejected,
-      textStyle: styles.textRejected,
-    },
-    Cancelled: {
-      text: "Đã huỷ",
-      badge: styles.badgeRejected,
-      textStyle: styles.textRejected,
-    },
+  };
+
+  const translateText = (text) => {
+    if (!text) return text;
+    
+
+    let translated = text
+      .replace(/Co-ownership group for vehicle/gi, "Nhóm sở hữu chung cho phương tiện")
+      .replace(/Group for/gi, "Nhóm sở hữu cho")
+      .replace(/Co-ownership group/gi, "Nhóm sở hữu chung");
+    
+    return translated;
   };
 
   const renderItem = ({ item }) => {
-  const statusConfig = STATUS_MAP[item.status] || {
-    text: item.status,
-    badge: styles.badgeRejected,
-    textStyle: styles.textRejected,
-  };
+    const statusConfig = STATUS_MAP[item.coOwnerGroupStatus] || {
+      text: item.coOwnerGroupStatus,
+      badge: styles.badgeRejected,
+      textStyle: styles.textRejected,
+    };
 
-  const formatExpiredDate = (dateStr) => {
-    if (!dateStr) return "Chưa có hạn";
-    const date = new Date(dateStr);
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear();
-    const hours = date.getHours().toString().padStart(2, "0");
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-    return `Hết hạn: ${day}/${month}/${year} ${hours}:${minutes}`;
-  };
+    const formatCreatedDate = (dateStr) => {
+      if (!dateStr) return "Chưa có ngày";
+      const date = new Date(dateStr);
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const year = date.getFullYear();
+      const hours = date.getHours().toString().padStart(2, "0");
+      const minutes = date.getMinutes().toString().padStart(2, "0");
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    };
 
-
-  const isExpired = item.expiredDate && new Date(item.expiredDate) < new Date();
-
-  return (
-    <TouchableOpacity
-      style={styles.card}
-      activeOpacity={0.88}
-    >
-      <View style={styles.info}>
-        <Text style={styles.name}>
-          {item.vehicleBrand} {item.vehicleModel}
-        </Text>
-
-        <Text style={styles.plate}>Biển số: {item.licensePlate}</Text>
-
-        <Text style={styles.share}>
-          Bán: {item.totalShares} phần
-        </Text>
-
-        <Text style={styles.price}>
-          {Number(item.pricePerShare).toLocaleString("vi-VN")} ₫ / phần
-        </Text>
-
-   
-        <Text
-          style={[
-            styles.expiredDate, 
-            isExpired && { color: "#ef4444" },
-          ]}
-        >
-          {formatExpiredDate(item.expiredDate)}
-        </Text>
-
-        <View style={[styles.badge, statusConfig.badge]}>
-          <Text style={[styles.badgeText, statusConfig.textStyle]}>
-            {statusConfig.text}
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={0.88}
+        onPress={() => navigation.navigate("MyVehicleDetail", { group: item })}
+      >
+        <View style={styles.info}>
+          <Text style={styles.name}>
+            {translateText(item.name)}
           </Text>
+
+          <Text style={styles.plate}>
+            {translateText(item.description)}
+          </Text>
+
+          <Text style={styles.share}>
+            Tổng phần: {item.totalShare} phần
+          </Text>
+
+          <Text style={styles.price}>
+            {Number(item.sharePrice).toLocaleString("vi-VN")} ₫ / phần
+          </Text>
+
+          <Text style={styles.expiredDate}>
+            Tạo: {formatCreatedDate(item.createdDate)}
+          </Text>
+
+          <View style={[styles.badge, statusConfig.badge]}>
+            <Text style={[styles.badgeText, statusConfig.textStyle]}>
+              {statusConfig.text}
+            </Text>
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
-};
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.container}>
-        <Text style={styles.title}>Yêu cầu bán của tôi</Text>
+        <Text style={styles.title}>Nhóm sở hữu chung của tôi</Text>
 
         {/* Thanh tìm kiếm */}
         <View style={searchStyles.searchContainer}>
           <TextInput
             style={searchStyles.searchInput}
-            placeholder="Tìm theo tên xe hoặc biển số..."
+            placeholder="Tìm theo tên nhóm..."
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCapitalize="none"
@@ -288,7 +260,7 @@ finally {
 
         <FlatList
           data={filteredData}
-          keyExtractor={(item) => item.sellRequestId}
+          keyExtractor={(item) => item.coOwnerGroupId}
           renderItem={renderItem}
           refreshControl={
             <RefreshControl
@@ -312,8 +284,8 @@ finally {
                 }}
               >
                 {searchQuery
-                  ? "Không tìm thấy yêu cầu nào phù hợp"
-                  : "Không có yêu cầu bán nào"}
+                  ? "Không tìm thấy nhóm nào phù hợp"
+                  : "Không có nhóm sở hữu chung nào"}
               </Text>
             )
           }

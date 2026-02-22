@@ -11,3 +11,12 @@ export const getAvailableSharesByGroupId = (groupId) => {
 export const createCoOwnerGroup = (data) => {
   return api.post("/coownergroups", data);
 };
+
+export const getCoOwnerGroupDetails = (groupId) => {
+  return api.get(`/coownergroups/${groupId}/details`);
+};
+
+
+export const getMyCoOwnerGroups = () => {
+  return api.get("/coownergroups/my-groups");
+};
