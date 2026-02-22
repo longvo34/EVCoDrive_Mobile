@@ -3,6 +3,8 @@ import ProfileScreen from "../screens/home/profile/ProfileScreen";
 import ChangePasswordScreen from "../screens/home/profile/changePassword/ChangePassword";
 import EKYCScreen from "../screens/home/profile/ekyc/EKYCScreen";
 import MemberWalletScreen from "../screens/home/profile/memberWallet/MemberWalletScreen";
+import ProfileMyVehicleScreen from "../screens/home/profile/myVehicle/ProfileMyVehicleScreen";
+import SellRequestDetailScreen from "../screens/home/profile/myVehicle/SellRequestDetailScreen";
 import ProfileDetailScreen from "../screens/home/profile/profileDetail/ProfileDetailScreen";
 import BuyRequest from "../screens/home/profile/registerVehicle/buyRequest/BuyRequest";
 import UtilitiesScreen from "../screens/home/profile/utilities/UtilitiesScreen";
@@ -38,6 +40,8 @@ export default function ProfileStack({ setIsLoggedIn, forceProfileUpdate, onProf
       <Stack.Screen name="Utilities" component={UtilitiesScreen} />
       <Stack.Screen name="ChatGroup" component={ChatGroupScreen} />
         <Stack.Screen name="ChatDetail" component={ChatGroupDetailScreen} />
+      <Stack.Screen name="ProfileMyVehicle" component={ProfileMyVehicleScreen} />
+      <Stack.Screen name="SellRequestDetail" component={SellRequestDetailScreen} />
     </Stack.Navigator>
   );
 }

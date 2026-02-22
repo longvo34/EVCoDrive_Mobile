@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons"; // ← thêm import này nếu chưa có
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import {
@@ -73,7 +73,6 @@ export default function HomeScreen() {
     }, [])
   );
 
-  // Lọc theo biển số
   const filteredGroups = groups.filter((group) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase().trim();
@@ -82,14 +81,6 @@ export default function HomeScreen() {
   });
 
   const clearSearch = () => setSearchQuery("");
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <EVLoading />
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -203,6 +194,8 @@ export default function HomeScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <EVLoading visible={loading} />
     </SafeAreaView>
   );
 }

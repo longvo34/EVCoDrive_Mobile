@@ -226,11 +226,4 @@ dateTextPlaceholder: {
   fontSize: 16,
   color: "#9ca3af", 
 },
-
-dateText: {
-  flex: 1,
-  marginLeft: 10,
-  fontSize: 16,
-  color: COLORS.black || "#111827",
-},
 });

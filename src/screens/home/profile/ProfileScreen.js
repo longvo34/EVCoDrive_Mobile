@@ -108,8 +108,8 @@ export default function ProfileScreen({ setIsLoggedIn }) {
               icon={
                 <Ionicons name="car-outline" size={22} color={COLORS.text} />
               }
-              label="Xe của tôi"
-              onPress={() => navigation.navigate("Vehicle")}
+              label="Xe của tôi đang bán"
+              onPress={() => navigation.navigate("ProfileMyVehicle")}
             />
 
       <MenuItem

@@ -88,7 +88,7 @@ const isValid = rawPrice > 0 && percent >= 10;
       {
         text: "OK",
         onPress: () => {
-          navigation.getParent()?.navigate("Vehicle");
+          navigation.getParent()?.navigate("ProfileMyVehicle");
         },
       },
     ]);

@@ -1,12 +1,12 @@
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useCallback, useMemo, useState } from "react";
 import {
-  FlatList,
-  RefreshControl,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    FlatList,
+    RefreshControl,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import EVLoading from "../../../components/animation/EVLoading";
 import { getMySellRequests } from "../../../services/sellRequest/sellRequest.service";
@@ -225,11 +225,6 @@ finally {
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.88}
-      onPress={() =>
-        navigation.navigate("SellRequestDetail", {
-          sellRequest: item,
-        })
-      }
     >
       <View style={styles.info}>
         <Text style={styles.name}>
