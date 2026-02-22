@@ -200,7 +200,7 @@ export default function MyVehicleScreen() {
       <TouchableOpacity
         style={styles.card}
         activeOpacity={0.88}
-        onPress={() => navigation.navigate("MyVehicleDetail", { group: item })}
+        onPress={() => navigation.navigate("MyVehicleDetail", { groupId: item.coOwnerGroupId, })}
       >
         <View style={styles.info}>
           <Text style={styles.name}>
