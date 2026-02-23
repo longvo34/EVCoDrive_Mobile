@@ -6,7 +6,7 @@ const COLORS = {
   background: "#F7F7F7",
   text: "#111111",
   signingGreen: "#33FF00",
-   softGreen: "#10b981",       
+   softGreen: "#4CAF50",       
   cancel: "#ef4444",
 };
 

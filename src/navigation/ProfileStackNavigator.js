@@ -7,6 +7,7 @@ import ProfileMyVehicleScreen from "../screens/home/profile/myVehicle/ProfileMyV
 import SellRequestDetailScreen from "../screens/home/profile/myVehicle/SellRequestDetailScreen";
 import ProfileDetailScreen from "../screens/home/profile/profileDetail/ProfileDetailScreen";
 import BuyRequest from "../screens/home/profile/registerVehicle/buyRequest/BuyRequest";
+import SellContractScreen from "../screens/home/profile/registerVehicle/buyRequest/sellContract/SellContractScreen";
 import UtilitiesScreen from "../screens/home/profile/utilities/UtilitiesScreen";
 import ChatGroupScreen from "../screens/home/profile/utilities/chatGroup/chatGroup/ChatGroupScreen";
 import ChatGroupDetailScreen from "../screens/home/profile/utilities/chatGroup/chatGroupDetail/ChatGroupDetailScreen";
@@ -42,6 +43,8 @@ export default function ProfileStack({ setIsLoggedIn, forceProfileUpdate, onProf
         <Stack.Screen name="ChatDetail" component={ChatGroupDetailScreen} />
       <Stack.Screen name="ProfileMyVehicle" component={ProfileMyVehicleScreen} />
       <Stack.Screen name="SellRequestDetail" component={SellRequestDetailScreen} />
+      <Stack.Screen name="SellContract" component={SellContractScreen} />
+     
     </Stack.Navigator>
   );
 }

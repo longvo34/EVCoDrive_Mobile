@@ -131,23 +131,32 @@ export default function MyVehicleDetailScreen({ navigation, route }) {
 
         {/* Action Buttons  */}
         <View style={styles.actionContainer}>
-          {[
-            { label: "Đặt xe", icon: "calendar-outline" },
-            { label: "Hóa đơn", icon: "receipt-outline" },
-            { label: "Biểu quyết", icon: "create-outline" },
-            { label: "Xem thêm", icon: "menu-outline" },
-          ].map((item, index) => (
-            <View key={index} style={styles.actionItem}>
-              <View style={styles.actionCircle}>
-                <Ionicons
-                  name={item.icon}
-                  size={22}
-                  color={COLORS.white}
-                />
-              </View>
-              <Text style={styles.actionText}>{item.label}</Text>
-            </View>
-          ))}
+         {[
+  { label: "Đặt xe", icon: "calendar-outline" },
+  { label: "Hóa đơn", icon: "receipt-outline" },
+  { label: "Biểu quyết", icon: "create-outline" },
+  {
+    label: "Xem thêm",
+    icon: "menu-outline",
+    onPress: () => navigation.navigate("ExtendedFeatures", { groupId }),
+  },
+].map((item, index) => (
+  <TouchableOpacity
+    key={index}
+    style={styles.actionItem}
+    activeOpacity={0.8}
+    onPress={item.onPress}
+  >
+    <View style={styles.actionCircle}>
+      <Ionicons
+        name={item.icon}
+        size={22}
+        color={COLORS.white}
+      />
+    </View>
+    <Text style={styles.actionText}>{item.label}</Text>
+  </TouchableOpacity>
+))}
         </View>
 
         {/* Wallet  */}

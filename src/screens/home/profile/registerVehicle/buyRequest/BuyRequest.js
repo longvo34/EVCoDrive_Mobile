@@ -9,10 +9,14 @@ import {
   View
 } from "react-native";
 
+import Constants from "expo-constants";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 import { Modal, TextInput } from "react-native";
 import EVLoading from "../../../../../components/animation/EVLoading";
 import COLORS from "../../../../../constants/colors";
 import { getIncomingBuyRequests, updateBuyRequestStatus } from "../../../../../services/buyRequest/buyRequest.service";
+import { getAccessToken } from "../../../../../utils/authStorage";
 import styles from "./BuyRequest.styles";
 
 export default function BuyRequestDetailScreen() {
@@ -50,18 +54,6 @@ export default function BuyRequestDetailScreen() {
     }
   };
 
-  if (loading) {
-    return <EVLoading visible={true} />;
-  }
-
-  if (!request) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>Không tìm thấy thông tin yêu cầu</Text>
-      </View>
-    );
-  }
-
   const handleUpdateStatus = async () => {
     if (!reason.trim()) {
       Alert.alert("Lỗi", "Vui lòng nhập lý do");
@@ -76,7 +68,7 @@ export default function BuyRequestDetailScreen() {
         reason: reason
       });
 
-      Alert.alert("Thành công", "Đã cập nhật trạng thái");
+      Alert.alert("Thành công", `Yêu cầu đã được ${selectedStatus === "Cancelled" ? "huỷ" : "cập nhật"}`);
 
       setShowReasonModal(false);
       setReason("");
@@ -84,8 +76,7 @@ export default function BuyRequestDetailScreen() {
 
       await fetchBuyRequestDetail();
     } catch (error) {
-      console.log("STATUS:", error.response?.status);
-      console.log("DATA:", error.response?.data);
+      console.log("STATUS ERROR:", error.response?.data);
 
       const errorCode = error.response?.data?.errorCode;
       const message = error.response?.data?.message;
@@ -94,26 +85,31 @@ export default function BuyRequestDetailScreen() {
       setReason("");
       setSelectedStatus(null);
 
-      if (errorCode === "VAL_3003") {
-        Alert.alert(
-          "Không thể duyệt",
-          "Hợp đồng chưa được ký đầy đủ bởi cả hai bên. Vui lòng hoàn tất ký hợp đồng trước khi duyệt yêu cầu."
-        );
-      } else {
-        Alert.alert(
-          "Lỗi",
-          message || "Không thể cập nhật trạng thái"
-        );
-      }
+      Alert.alert(
+        "Lỗi",
+        message || "Không thể cập nhật trạng thái yêu cầu"
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  if (loading) {
+    return <EVLoading visible={true} />;
+  }
+
+  if (!request) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Không tìm thấy thông tin yêu cầu</Text>
+      </View>
+    );
+  }
+
   return (
     <>
       <ScrollView style={styles.container}>
-        {/* Header với nút back */}
+        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={28} color={COLORS.text} />
@@ -129,8 +125,8 @@ export default function BuyRequestDetailScreen() {
             <Text style={styles.groupName}>{request.groupName || "Yêu cầu mua xe"}</Text>
             <View style={styles.statusBadge}>
               <Text style={styles.statusText}>
-                {request.status === "Proccessing" || request.status === "Processing"
-                  ? "Chờ duyệt"
+                {request.status === "Processing" || request.status === "Proccessing"
+                  ? "Chờ xử lý"
                   : request.status}
               </Text>
             </View>
@@ -174,37 +170,127 @@ export default function BuyRequestDetailScreen() {
             <Text style={styles.quantityValue}>{request.quantity || 1}</Text>
           </View>
 
-          {/* Thông tin hợp đồng */}
-          {request.contract && (
-            <View style={styles.contractSection}>
-              <Text style={styles.sectionTitle}>Thông tin hợp đồng</Text>
-              <View style={styles.contractInfo}>
-                <Text style={styles.contractLabel}>Số hợp đồng:</Text>
-                <Text style={styles.contractValue}>
-                  {request.contract.contractNumber || "Chưa tạo"}
-                </Text>
-              </View>
-              <View style={styles.contractInfo}>
-                <Text style={styles.contractLabel}>Trạng thái:</Text>
-                <Text
-                  style={[
-                    styles.contractStatus,
-                    request.isContractFullySigned ? styles.signed : styles.notSigned,
-                  ]}
-                >
-                  {request.isContractFullySigned ? "Đã ký đầy đủ" : "Chưa ký đầy đủ"}
-                </Text>
-              </View>
-              <View style={styles.contractInfo}>
-                <Text style={styles.contractLabel}>Ngày ký:</Text>
-                <Text style={styles.contractValue}>
-                  {request.contract.signedDate
-                    ? new Date(request.contract.signedDate).toLocaleDateString("vi-VN")
-                    : "Chưa ký"}
-                </Text>
-              </View>
-            </View>
-          )}
+         {/* Thông tin hợp đồng */}
+{request.contract && (
+  <View style={styles.contractSection}>
+    <Text style={styles.sectionTitle}>Thông tin hợp đồng</Text>
+
+    <View style={styles.contractInfo}>
+      <Text style={styles.contractLabel}>Số hợp đồng:</Text>
+      <Text style={styles.contractValue}>
+        {request.contract.contractNumber || "Chưa tạo"}
+      </Text>
+    </View>
+
+    <View style={styles.contractInfo}>
+      <Text style={styles.contractLabel}>Trạng thái:</Text>
+      <Text
+        style={[
+          styles.contractStatus,
+          request.isContractFullySigned ? styles.signed : styles.notSigned,
+        ]}
+      >
+        {request.isContractFullySigned ? "Đã ký đầy đủ" : "Chưa ký đầy đủ"}
+      </Text>
+    </View>
+
+    <View style={styles.contractInfo}>
+      <Text style={styles.contractLabel}>Ngày ký:</Text>
+      <Text style={styles.contractValue}>
+        {request.contract.signedDate
+          ? new Date(request.contract.signedDate).toLocaleDateString("vi-VN")
+          : "Chưa ký"}
+      </Text>
+    </View>
+
+    {/* Nút hành động: Ký hoặc Xem PDF */}
+    <View style={{ marginTop: 16 }}>
+      {request.isContractFullySigned ? (
+      
+        <TouchableOpacity
+          style={{
+            backgroundColor: "#4CAF50", 
+            padding: 14,
+            borderRadius: 12,
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "center",
+            gap: 8,
+          }}
+          onPress={async () => {
+            const contractId = request.contract?.contractId;
+            if (!contractId) {
+              Alert.alert("Thông báo", "Chưa có thông tin hợp đồng để tải PDF");
+              return;
+            }
+
+            try {
+              setLoading(true);
+
+              const token = await getAccessToken();
+              const fileName = `Hop-dong_${contractId}.pdf`;
+              const fileUri = FileSystem.documentDirectory + fileName;
+
+              const API_URL = Constants.expoConfig.extra.API_URL;
+              const downloadUrl = `${API_URL}/contracts/${contractId}/pdf`;
+
+              const { uri } = await FileSystem.downloadAsync(downloadUrl, fileUri, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+
+              if (!(await Sharing.isAvailableAsync())) {
+                Alert.alert("Không hỗ trợ", "Thiết bị không hỗ trợ mở file PDF");
+                return;
+              }
+
+              await Sharing.shareAsync(uri, {
+                mimeType: "application/pdf",
+                dialogTitle: "Xem / Tải hợp đồng PDF",
+                UTI: "com.adobe.pdf",
+              });
+            } catch (err) {
+              console.error("LỖI TẢI PDF:", err);
+              Alert.alert("Lỗi", "Không thể tải hợp đồng PDF. Vui lòng thử lại.");
+            } finally {
+              setLoading(false);
+            }
+          }}
+        >
+          <Ionicons name="document-text-outline" size={20} color="#fff" />
+          <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
+            Xem hợp đồng PDF
+          </Text>
+        </TouchableOpacity>
+      ) : (
+        // Chưa ký đầy đủ → Hiện nút KÝ HỢP ĐỒNG (giữ nguyên code cũ)
+        request.contract?.contractId && (
+          <TouchableOpacity
+            style={{
+              backgroundColor: COLORS.primary || "#FFD600",
+              padding: 14,
+              borderRadius: 12,
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 8,
+            }}
+            onPress={() => {
+              navigation.navigate("SellContract", {
+                contractId: request.contract.contractId,
+                buyRequestId: buyRequestId,
+              });
+            }}
+          >
+            <Ionicons name="create-outline" size={20} color="#000" />
+            <Text style={{ color: "#000", fontWeight: "bold", fontSize: 16 }}>
+              📝 Ký hợp đồng ngay
+            </Text>
+          </TouchableOpacity>
+        )
+      )}
+    </View>
+  </View>
+)}
 
           {/* Cổ phần chi tiết */}
           {request.requestedShares?.length > 0 && (
@@ -226,49 +312,31 @@ export default function BuyRequestDetailScreen() {
             </View>
           )}
         </View>
-        {/* Nút duyệt / huỷ */}
-        {(request.status === "Processing" ||
-          request.status === "Proccessing") && (
-            <View style={{ flexDirection: "row", gap: 12, marginBottom: 30 }}>
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  backgroundColor: COLORS.softGreen,
-                  padding: 14,
-                  borderRadius: 12,
-                  alignItems: "center",
-                }}
-                onPress={() => {
-                  setSelectedStatus("Completed");
-                  setShowReasonModal(true);
-                }}
-              >
-                <Text style={{ color: "#fff", fontWeight: "bold" }}>
-                  Duyệt yêu cầu
-                </Text>
-              </TouchableOpacity>
 
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  backgroundColor: COLORS.cancel,
-                  padding: 14,
-                  borderRadius: 12,
-                  alignItems: "center",
-                }}
-                onPress={() => {
-                  setSelectedStatus("Cancelled");
-                  setShowReasonModal(true);
-                }}
-              >
-                <Text style={{ color: "#fff", fontWeight: "bold" }}>
-                  Huỷ yêu cầu
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
+        {/* Chỉ giữ nút HUỶ yêu cầu */}
+        {(request.status === "Processing" || request.status === "Proccessing") && (
+          <View style={{ marginBottom: 30 }}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: COLORS.cancel,
+                padding: 14,
+                borderRadius: 12,
+                alignItems: "center",
+              }}
+              onPress={() => {
+                setSelectedStatus("Cancelled");
+                setShowReasonModal(true);
+              }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                Huỷ yêu cầu
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
 
+      {/* Modal nhập lý do (chỉ dùng cho huỷ) */}
       <Modal visible={showReasonModal} transparent animationType="fade">
         <View
           style={{
@@ -292,8 +360,7 @@ export default function BuyRequestDetailScreen() {
                 marginBottom: 12
               }}
             >
-              Nhập lý do{" "}
-              {selectedStatus === "Completed" ? "duyệt" : "huỷ"}
+              Nhập lý do huỷ yêu cầu
             </Text>
 
             <TextInput
@@ -333,10 +400,7 @@ export default function BuyRequestDetailScreen() {
               <TouchableOpacity
                 style={{
                   flex: 1,
-                  backgroundColor:
-                    selectedStatus === "Completed"
-                      ? COLORS.softGreen
-                      : COLORS.cancel,
+                  backgroundColor: COLORS.cancel,
                   padding: 12,
                   borderRadius: 12,
                   alignItems: "center"
@@ -344,7 +408,7 @@ export default function BuyRequestDetailScreen() {
                 onPress={handleUpdateStatus}
               >
                 <Text style={{ color: "#fff", fontWeight: "bold" }}>
-                  Xác nhận
+                  Xác nhận huỷ
                 </Text>
               </TouchableOpacity>
             </View>
@@ -353,6 +417,4 @@ export default function BuyRequestDetailScreen() {
       </Modal>
     </>
   );
-
 }
-

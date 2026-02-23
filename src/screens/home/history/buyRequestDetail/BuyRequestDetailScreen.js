@@ -1,5 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
+import Constants from "expo-constants";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -11,10 +14,9 @@ import {
 import EVLoading from "../../../../components/animation/EVLoading";
 import {
   deleteBuyRequest,
-
-
-  getBuyRequestById
+  getBuyRequestById,
 } from "../../../../services/buyRequest/buyRequest.service";
+import { getAccessToken } from "../../../../utils/authStorage";
 import styles from "./BuyRequestDetailScreen.styles";
 
 export default function BuyRequestDetailScreen({ route }) {
@@ -48,10 +50,7 @@ export default function BuyRequestDetailScreen({ route }) {
       "Xác nhận hủy",
       "Bạn có chắc chắn muốn hủy yêu cầu mua này?\nHành động này không thể hoàn tác.",
       [
-        {
-          text: "Đóng",
-          style: "cancel",
-        },
+        { text: "Đóng", style: "cancel" },
         {
           text: "Hủy yêu cầu",
           style: "destructive",
@@ -74,6 +73,45 @@ export default function BuyRequestDetailScreen({ route }) {
         },
       ]
     );
+  };
+
+  const handleViewPdf = async () => {
+    const contractId = data?.contract?.contractId;
+    if (!contractId) {
+      Alert.alert("Thông báo", "Không tìm thấy hợp đồng để xem PDF");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const token = await getAccessToken();
+      const fileName = `Hop-dong_${contractId}.pdf`;
+      const fileUri = FileSystem.documentDirectory + fileName;
+
+      const API_URL = Constants.expoConfig.extra.API_URL;
+      const downloadUrl = `${API_URL}/contracts/${contractId}/pdf`;
+
+      const { uri } = await FileSystem.downloadAsync(downloadUrl, fileUri, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!(await Sharing.isAvailableAsync())) {
+        Alert.alert("Không hỗ trợ", "Thiết bị không hỗ trợ mở file PDF");
+        return;
+      }
+
+      await Sharing.shareAsync(uri, {
+        mimeType: "application/pdf",
+        dialogTitle: "Xem / Tải hợp đồng PDF",
+        UTI: "com.adobe.pdf",
+      });
+    } catch (err) {
+      console.error("LỖI TẢI PDF:", err);
+      Alert.alert("Lỗi", "Không thể tải hợp đồng PDF. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getStatusLabel = (status) => {
@@ -132,7 +170,62 @@ export default function BuyRequestDetailScreen({ route }) {
           </View>
         </View>
 
-        {/* Share list */}
+        {/* Thông tin hợp đồng */}
+        {data.contract && (
+          <View style={styles.contractSection || { marginTop: 20, padding: 16, backgroundColor: "#f9f9f9", borderRadius: 12 }}>
+            <Text style={styles.sectionTitle || { fontSize: 18, fontWeight: "bold", marginBottom: 12 }}>
+              Thông tin hợp đồng
+            </Text>
+
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+              <Text style={{ fontWeight: "600", color: "#666" }}>Số hợp đồng:</Text>
+              <Text>{data.contract.contractNumber || "Chưa tạo"}</Text>
+            </View>
+
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+              <Text style={{ fontWeight: "600", color: "#666" }}>Trạng thái:</Text>
+              <Text style={{ color: data.contract.isFullySigned ? "#4CAF50" : "#FF9800" }}>
+                {data.contract.isFullySigned || data.contract.signedDate 
+                  ? "Đã ký đầy đủ" 
+                  : "Chưa ký đầy đủ"}
+              </Text>
+            </View>
+
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
+              <Text style={{ fontWeight: "600", color: "#666" }}>Ngày ký:</Text>
+              <Text>
+                {data.contract.signedDate
+                  ? new Date(data.contract.signedDate).toLocaleDateString("vi-VN")
+                  : "Chưa ký"}
+              </Text>
+            </View>
+
+            {/* Nút Xem hợp đồng PDF - luôn hiển thị nếu có contractId */}
+            {data.contract.contractId && (
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#4CAF50",
+                  paddingVertical: 14,
+                  borderRadius: 8,
+                  alignItems: "center",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  gap: 8,
+                  marginTop: 8,
+                }}
+                onPress={handleViewPdf}
+                disabled={loading}
+              >
+                <Ionicons name="document-text-outline" size={20} color="#fff" />
+                <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
+                  Xem hợp đồng PDF
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* Danh sách cổ phần */}
         <Text style={styles.sectionTitle}>Danh sách cổ phần</Text>
 
         {data.requestedShares?.map((share) => (
@@ -153,8 +246,10 @@ export default function BuyRequestDetailScreen({ route }) {
             </Text>
           </View>
         ))}
+
         <View style={{ height: 100 }} />
       </ScrollView>
+
       {canCancel && (
         <View style={{ paddingHorizontal: 16, paddingVertical: 16, backgroundColor: styles.container.backgroundColor || '#fff' }}>
           <TouchableOpacity
