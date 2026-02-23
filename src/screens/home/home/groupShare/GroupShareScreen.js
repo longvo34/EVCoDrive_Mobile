@@ -185,13 +185,27 @@ export default function GroupShareScreen() {
       });
 
     } catch (err) {
-      const errorData = err?.response?.data;
-      console.log("BUY ERROR:", errorData || err);
-      console.log("Error chi tiết:", err.message, err.stack);
-      Alert.alert("Lỗi", "Tạo yêu cầu mua thất bại. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
+    const errorData = err?.response?.data;
+    console.log("BUY ERROR:", errorData || err);
+
+    let errorMessage = "Tạo yêu cầu mua thất bại. Vui lòng thử lại.";
+    if (errorData && !errorData.isSuccess) {
+      if (errorData.errorCode === "VAL_3003") {
+        errorMessage = "Bạn không thể mua chính cổ phần của mình.";
+      } else if (errorData.message) {
+        if (errorData.message.includes("own shares")) {
+          errorMessage = "Bạn không thể mua chính cổ phần của mình.";
+        } else {
+          errorMessage = errorData.message; 
+        }
+      }
     }
+
+    Alert.alert("Thông báo", errorMessage);
+
+  } finally {
+    setLoading(false);
+  }
   };
 
   return (
