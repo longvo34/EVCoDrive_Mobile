@@ -133,11 +133,9 @@ export default function VehicleDetailScreen({ route, navigation }) {
       const contractRes = await getContractsByMember(memberId);
       const contracts = contractRes.data.data || [];
 
-      const vehicleContract = contracts.find(
-        (c) =>
-          c.contractType === "VehicleRegistration" &&
-          c.contractStatuses === "Completed"
-      );
+    const vehicleContract = contracts.find(
+  (c) => c.title?.includes("Hợp đồng đăng ký xe")
+);
 
       if (!vehicleContract) {
         Alert.alert("Không tìm thấy hợp đồng");
