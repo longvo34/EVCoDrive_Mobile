@@ -59,9 +59,29 @@ export default function MainNavigator({ setIsLoggedIn, forceProfileUpdate, onPro
               })}
             />
 
-            <Tab.Screen name="Vehicle" component={VehicleStackNavigator} />
+            <Tab.Screen
+              name="Vehicle"
+              component={VehicleStackNavigator}
+              listeners={({ navigation }) => ({
+                tabPress: () => {
+                  navigation.navigate("Vehicle", {
+                    screen: "VehicleMain",
+                  });
+                },
+              })}
+            />
 
-            <Tab.Screen name="History" component={HistoryStackNavigator} />
+            <Tab.Screen
+              name="History"
+              component={HistoryStackNavigator}
+              listeners={({ navigation }) => ({
+                tabPress: () => {
+                  navigation.navigate("History", {
+                    screen: "HistoryMain",
+                  });
+                },
+              })}
+            />
             <Tab.Screen
               name="Profile"
               listeners={({ navigation }) => ({
