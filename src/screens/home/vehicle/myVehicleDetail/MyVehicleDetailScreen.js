@@ -132,7 +132,19 @@ export default function MyVehicleDetailScreen({ navigation, route }) {
         {/* Action Buttons  */}
         <View style={styles.actionContainer}>
          {[
-  { label: "Đặt xe", icon: "calendar-outline" },
+  { label: "Đặt xe", icon: "calendar-outline",
+    onPress: () => navigation.navigate("Booking", {
+  groupId,
+  vehicle: {
+     vehicleId: vehicle?.vehicleId,
+    name: vehicle?.vehicleModel?.name || "Xe chưa xác định",
+    licensePlate: vehicle?.licensePlate || "---",
+    batteryHealth: vehicle?.batteryHealth || 0,
+    imageUrl: vehicle?.images?.[0]?.secureUrl || "https://via.placeholder.com/400",
+  },
+  groupName: groupDetail?.name,         
+  totalValue: (groupDetail?.totalShares || 0) * (groupDetail?.sharePrice || 0),
+}), },
   { label: "Hóa đơn", icon: "receipt-outline" },
   { label: "Biểu quyết", icon: "create-outline" },
   {
