@@ -2,23 +2,26 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    Image,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import EVLoading from "../../../../../components/animation/EVLoading";
 import COLORS from "../../../../../constants/colors";
 import {
-    createBooking,
-    getBookingsByVehicle,
+  createBooking,
+  createUsageQuota,
+  getBookingsByVehicle,
+  getQuotaByShareUnit,
 } from "../../../../../services/booking/booking.service";
 import { getProfileMember } from "../../../../../services/profile/profile.service";
+import { getMyShares } from "../../../../../services/shareHolder/shareHolder.service";
 import styles from "./BookingScreen.styles";
 
 export default function BookingScreen() {
@@ -37,10 +40,55 @@ export default function BookingScreen() {
   const [member, setMember] = useState(null);
   const [isStartPickerVisible, setStartPickerVisible] = useState(false);
   const [isEndPickerVisible, setEndPickerVisible] = useState(false);
+  const [shareUnits, setShareUnits] = useState([]);
 
   useEffect(() => {
     loadProfile();
   }, []);
+
+  useEffect(() => {
+  loadMyShareUnit();
+}, []);
+
+const loadMyShareUnit = async () => {
+  try {
+    const res = await getMyShares();
+
+    console.log("🚗 MY SHARES:", res.data);
+
+    const groups = res.data.data || [];
+
+    // tìm đúng xe
+    const vehicleGroup = groups.find(
+      g => g.vehicleLicensePlate === vehicle.licensePlate
+    );
+
+    if (!vehicleGroup) {
+      console.log("❌ Không có quyền xe này");
+      return;
+    }
+
+    // lấy ALL share AVAILABLE
+    const availableShares = vehicleGroup.shareUnits.filter(
+      s => s.status === "Available"
+    );
+
+    if (!availableShares.length) {
+      console.log("❌ Không còn share khả dụng");
+      return;
+    }
+
+    console.log(
+      "✅ AVAILABLE SHARE UNITS:",
+      availableShares.map(s => s.shareUnitId)
+    );
+
+    setShareUnits(availableShares);
+
+  } catch (err) {
+    console.log("❌ LOAD SHARE ERROR:", err);
+  }
+};
 
   const loadProfile = async () => {
     const res = await getProfileMember();
@@ -127,55 +175,114 @@ export default function BookingScreen() {
   const combineDateTime = (date, time) =>
     new Date(`${date}T${time}:00`).toISOString();
 
-  /* ================= BOOKING ================= */
-  const handleBooking = async () => {
-    if (selectedDates.length === 0)
-      return Alert.alert("Vui lòng chọn ngày");
+ const ensureQuota = async (shareUnitId) => {
 
-    if (!member?.memberId)
-      return Alert.alert("Không tìm thấy thông tin người dùng");
+  console.log("⚡ Checking quota...");
+  console.log("👉 shareUnitId:", shareUnitId);
 
-    if (!purpose.trim())
-      return Alert.alert("Vui lòng nhập mục đích sử dụng");
+  const quotaRes = await getQuotaByShareUnit(shareUnitId);
 
-    try {
-      setLoading(true);
-      for (const date of selectedDates) {
-        if (markedDates[date]) continue;
+  const quotas = quotaRes?.data?.data;
 
-        const payload = {
-          memberId: member.memberId,
-          vehicleId,
-          purpose: purpose.trim(),
-          checkInDate: combineDateTime(date, startTime),
-          checkOutDate: combineDateTime(date, endTime),
-          note: note.trim() || "",
-        };
+  console.log("📦 quota list:", quotas);
 
-        await createBooking(payload);
-      }
-
-      Alert.alert("✅ Đặt xe thành công");
-
-      setSelectedDates([]);
-      setPurpose("");
-      setNote("");
-      await loadBookings();
-      navigation.goBack();
-    } catch (err) {
-  const errorCode = err?.response?.data?.errorCode;
-
-  let message = "Đặt xe thất bại";
-
-  if (errorCode === "SYS_5005") {
-    message = "Ngày check-in phải trước ngày check-out";
+  if (Array.isArray(quotas) && quotas.length > 0) {
+    console.log("✅ Quota exists");
+    return;
   }
 
-  Alert.alert("Đặt xe thất bại", message);
-}finally {
-      setLoading(false);
+  console.log("🚀 No quota → creating quota");
+
+  const createRes = await createUsageQuota({
+  shareUnitId: shareUnitId,
+});
+
+  console.log("✅ CREATE RESULT:", createRes?.data);
+
+  await new Promise(resolve => setTimeout(resolve, 1500));
+
+  const verify = await getQuotaByShareUnit(shareUnitId);
+
+  console.log("✅ VERIFY AFTER CREATE:", verify?.data);
+};
+
+  /* ================= BOOKING ================= */
+ const handleBooking = async () => {
+
+  if (!shareUnits.length)
+    return Alert.alert("Không tìm thấy quyền sử dụng xe");
+
+  if (selectedDates.length === 0)
+    return Alert.alert("Vui lòng chọn ngày");
+
+  if (!member?.memberId)
+    return Alert.alert("Không tìm thấy thông tin người dùng");
+
+  if (!purpose.trim())
+    return Alert.alert("Vui lòng nhập mục đích sử dụng");
+
+  try {
+    setLoading(true);
+
+    /* ✅ ensure quota cho TOÀN BỘ shares */
+    console.log("⚡ Ensure quota for all share units");
+
+    for (const share of shareUnits) {
+      await ensureQuota(share.shareUnitId);
     }
-  };
+
+    /* ✅ dùng 1 share để booking */
+    const bookingShareUnitId = shareUnits[0].shareUnitId;
+
+    for (const date of selectedDates) {
+
+      if (markedDates[date]) continue;
+
+      const payload = {
+        memberId: member.memberId,
+        vehicleId,
+        shareUnitId: bookingShareUnitId,
+        purpose: purpose.trim(),
+        checkInDate: combineDateTime(date, startTime),
+        checkOutDate: combineDateTime(date, endTime),
+        note: note.trim() || "",
+      };
+
+      console.log("📤 BOOKING PAYLOAD:", payload);
+
+      await createBooking(payload);
+    }
+
+    Alert.alert("✅ Đặt xe thành công");
+
+    setSelectedDates([]);
+    setPurpose("");
+    setNote("");
+
+    await loadBookings();
+    navigation.goBack();
+
+  } catch (err) {
+
+    console.log("❌ BOOKING ERROR FULL:", err);
+    console.log("❌ RESPONSE:", err?.response?.data);
+
+    const errorCode = err?.response?.data?.errorCode;
+
+    let message = "Đặt xe thất bại";
+
+    if (errorCode === "SYS_5005")
+      message = "Ngày check-in phải trước ngày check-out";
+
+    if (errorCode === "SYS_5004")
+      message = "Member chưa có quota năm cho cổ phần";
+
+    Alert.alert("Đặt xe thất bại", message);
+
+  } finally {
+    setLoading(false);
+  }
+};
 
   /* ================= STATUS ================= */
   const renderVehicleStatus = () => {
