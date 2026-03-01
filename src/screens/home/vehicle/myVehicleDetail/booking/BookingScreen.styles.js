@@ -144,5 +144,21 @@ export default StyleSheet.create({
     fontSize: 16,
   },
 
-  
+  viewMyBookingButton: {
+    marginTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.primary + "15",  
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.primary + "40",
+  },
+
+  viewMyBookingText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: COLORS.primary,
+    marginLeft: 8,
+  },
 });

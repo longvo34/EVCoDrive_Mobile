@@ -14,3 +14,16 @@ export const getQuotaByShareUnit = (shareUnitId) => {
 
 export const createUsageQuota = (data) =>
   api.post("/usage-quotas", data);
+
+export const getBookingById = (bookingId) => {
+  return api.get(`/bookings/${bookingId}`);
+};
+
+export const getBookingsByMember = (memberId, params = {}) => {
+  return api.get(`/bookings/member/${memberId}`, {
+    params: {
+      pageNumber: params.pageNumber || 1,
+      pageSize: params.pageSize || 10,
+    },
+  });
+};

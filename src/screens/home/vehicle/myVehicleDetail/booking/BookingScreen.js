@@ -364,6 +364,20 @@ const loadMyShareUnit = async () => {
             <Text style={styles.carName}>{vehicle.name}</Text>
             <Text>Biển số: {vehicle.licensePlate}</Text>
             <Text>🔋 {vehicle.batteryHealth || 0}%</Text>
+
+            <TouchableOpacity
+      style={styles.viewMyBookingButton}
+      onPress={() => {
+        navigation.navigate("MyBooking", {
+          vehicleId: vehicle?.vehicleId,
+          licensePlate: vehicle?.licensePlate,
+        });
+      }}
+    >
+      <Ionicons name="calendar-outline" size={18} color={COLORS.primary} />
+      <Text style={styles.viewMyBookingText}>Xem lịch xe của tôi</Text>
+    </TouchableOpacity>
+    
           </View>
 
           {renderVehicleStatus()}
