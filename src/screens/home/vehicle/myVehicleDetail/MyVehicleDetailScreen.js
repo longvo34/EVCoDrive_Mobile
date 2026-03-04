@@ -146,7 +146,7 @@ export default function MyVehicleDetailScreen({ navigation, route }) {
   totalValue: (groupDetail?.totalShares || 0) * (groupDetail?.sharePrice || 0),
 }), },
   { label: "Hóa đơn", icon: "receipt-outline" },
-  { label: "Biểu quyết", icon: "create-outline" },
+  { label: "Biểu quyết", icon: "create-outline", onPress: () => navigation.navigate("Voting", { groupId }) },
   {
     label: "Xem thêm",
     icon: "menu-outline",
