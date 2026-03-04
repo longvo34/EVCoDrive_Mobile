@@ -185,7 +185,7 @@ export default function MyVehicleDetailScreen({ navigation, route }) {
           </View>
 
           <Text style={styles.walletSub}>Số dư hiện tại</Text>
-          <Text style={styles.walletAmount}>1.200.000đ</Text>
+          <Text style={styles.walletAmount}>0đ</Text>
         </View>
 
         {/* Stats  */}
