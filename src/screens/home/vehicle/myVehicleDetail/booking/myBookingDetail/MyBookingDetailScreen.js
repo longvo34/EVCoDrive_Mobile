@@ -12,38 +12,33 @@ import {
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 import EVLoading from "../../../../../../components/animation/EVLoading";
 import COLORS from "../../../../../../constants/colors";
 
+import { Calendar } from "react-native-calendars";
 import {
   deleteBooking,
   getBookingById,
-  updateBooking,
+  updateBooking
 } from "../../../../../../services/booking/booking.service";
-
 import styles from "./MyBookingDetailScreen.styles";
 
 export default function MyBookingDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-
   const { bookingId } = route.params;
-
   const [loading, setLoading] = useState(false);
   const [booking, setBooking] = useState(null);
-
-  // State cho modal chỉnh sửa
   const [modalVisible, setModalVisible] = useState(false);
   const [editPurpose, setEditPurpose] = useState("");
   const [editNote, setEditNote] = useState("");
   const [editCheckInDate, setEditCheckInDate] = useState(new Date());
   const [editCheckOutDate, setEditCheckOutDate] = useState(new Date());
-
-  // Picker visibility
   const [isCheckInPickerVisible, setCheckInPickerVisible] = useState(false);
   const [isCheckOutPickerVisible, setCheckOutPickerVisible] = useState(false);
+  
+const [selectedDates, setSelectedDates] = useState([]);
 
   useEffect(() => {
     fetchBookingDetail();
@@ -69,46 +64,56 @@ export default function MyBookingDetailScreen() {
     }
   };
 
-  const handleOpenEditModal = () => {
-    setModalVisible(true);
-  };
+ const handleOpenEditModal = async () => {
+  
+
+  // set selected từ booking hiện tại
+  const dates = [];
+  let current = new Date(booking.checkInDate);
+  const end = new Date(booking.checkOutDate);
+
+  while (current <= end) {
+    dates.push(current.toISOString().split("T")[0]);
+    current.setDate(current.getDate() + 1);
+  }
+
+  setSelectedDates(dates);
+  setModalVisible(true);
+};
 
   const handleSaveEdit = async () => {
-    if (!editPurpose.trim()) {
-      return Alert.alert("Lỗi", "Mục đích sử dụng không được để trống");
-    }
+  if (!editPurpose.trim()) {
+    return Alert.alert("Lỗi", "Mục đích sử dụng không được để trống");
+  }
 
-    // So sánh chỉ ngày (bỏ giờ/phút)
-    const checkInDateOnly = new Date(editCheckInDate.setHours(0, 0, 0, 0));
-    const checkOutDateOnly = new Date(editCheckOutDate.setHours(0, 0, 0, 0));
+  if (selectedDates.length === 0) {
+    return Alert.alert("Lỗi", "Vui lòng chọn ít nhất một ngày");
+  }
 
-    if (checkInDateOnly >= checkOutDateOnly) {
-      return Alert.alert("Lỗi", "Ngày nhận xe phải trước ngày trả xe");
-    }
+  try {
+    setLoading(true);
+    setModalVisible(false);
 
-    try {
-      setLoading(true);
-      setModalVisible(false);
+    const sortedDates = [...selectedDates].sort();
 
-      // Format chỉ ngày (YYYY-MM-DD)
-      const payload = {
-        purpose: editPurpose.trim(),
-        checkInDate: editCheckInDate.toISOString().split("T")[0], // chỉ lấy ngày
-        checkOutDate: editCheckOutDate.toISOString().split("T")[0], // chỉ lấy ngày
-        note: editNote.trim() || "",
-      };
+    const payload = {
+      purpose: editPurpose.trim(),
+      checkInDate: sortedDates[0],
+      checkOutDate: sortedDates[sortedDates.length - 1],
+      note: editNote.trim() || "",
+    };
 
-      await updateBooking(bookingId, payload);
+    await updateBooking(bookingId, payload);
 
-      Alert.alert("Thành công", "Cập nhật booking thành công");
-      fetchBookingDetail(); // Reload lại chi tiết
-    } catch (error) {
-      console.log("UPDATE ERROR:", error);
-      Alert.alert("Lỗi", "Cập nhật thất bại. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    Alert.alert("Thành công", "Cập nhật booking thành công");
+    fetchBookingDetail();
+  } catch (error) {
+    console.log("UPDATE ERROR:", error);
+    Alert.alert("Lỗi", "Cập nhật thất bại. Vui lòng thử lại.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDeleteBooking = () => {
     Alert.alert(
@@ -157,6 +162,8 @@ export default function MyBookingDetailScreen() {
         return status;
     }
   };
+
+
 
   return (
     <View style={styles.container}>
@@ -269,95 +276,79 @@ export default function MyBookingDetailScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Chỉnh sửa booking</Text>
+  <ScrollView
+    showsVerticalScrollIndicator={false}
+    contentContainerStyle={{ paddingBottom: 30 }}
+  >
+    <Text style={styles.modalTitle}>Chỉnh sửa booking</Text>
 
-            {/* MỤC ĐÍCH */}
-            <Text style={styles.modalLabel}>Mục đích sử dụng *</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={editPurpose}
-              onChangeText={setEditPurpose}
-              placeholder="Nhập mục đích sử dụng"
-              multiline
-            />
+    {/* MỤC ĐÍCH */}
+    <Text style={styles.modalLabel}>Mục đích sử dụng *</Text>
+    <TextInput
+      style={styles.modalInput}
+      value={editPurpose}
+      onChangeText={setEditPurpose}
+      multiline
+    />
 
-            {/* GHI CHÚ */}
-            <Text style={styles.modalLabel}>Ghi chú</Text>
-            <TextInput
-              style={[styles.modalInput, { minHeight: 80 }]}
-              value={editNote}
-              onChangeText={setEditNote}
-              placeholder="Ghi chú thêm (nếu có)"
-              multiline
-            />
+    {/* GHI CHÚ */}
+    <Text style={styles.modalLabel}>Ghi chú</Text>
+    <TextInput
+      style={[styles.modalInput, { minHeight: 80 }]}
+      value={editNote}
+      onChangeText={setEditNote}
+      multiline
+    />
 
-            {/* NGÀY NHẬN XE */}
-            <Text style={styles.modalLabel}>Nhận xe (chỉ ngày)</Text>
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setCheckInPickerVisible(true)}
-            >
-              <Text style={styles.dateText}>
-                {formatDate(editCheckInDate)}
-              </Text>
-            </TouchableOpacity>
+    {/* CALENDAR */}
+    <Text style={styles.modalLabel}>Chọn ngày sử dụng</Text>
 
-            {/* NGÀY TRẢ XE */}
-            <Text style={styles.modalLabel}>Trả xe (chỉ ngày)</Text>
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setCheckOutPickerVisible(true)}
-            >
-              <Text style={styles.dateText}>
-                {formatDate(editCheckOutDate)}
-              </Text>
-            </TouchableOpacity>
+    <View style={styles.calendarContainer}>
+     <Calendar
+  minDate={new Date().toISOString().split("T")[0]}
+  markedDates={selectedDates.reduce((acc, date) => {
+    acc[date] = {
+      selected: true,
+      selectedColor: COLORS.primary,
+    };
+    return acc;
+  }, {})}
+  onDayPress={(day) => {
+    const date = day.dateString;
 
-            {/* BUTTONS */}
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: "#ccc" }]}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.modalButtonText}>Huỷ</Text>
-              </TouchableOpacity>
+    setSelectedDates((prev) =>
+      prev.includes(date)
+        ? prev.filter((d) => d !== date)
+        : [...prev, date]
+    );
+  }}
+/>
+    </View>
 
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: COLORS.primary }]}
-                onPress={handleSaveEdit}
-              >
-                <Text style={[styles.modalButtonText, { color: "#fff" }]}>
-                  Lưu thay đổi
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+    {/* BUTTONS */}
+    <View style={styles.modalButtons}>
+      <TouchableOpacity
+        style={[styles.modalButton, { backgroundColor: "#ccc" }]}
+        onPress={() => setModalVisible(false)}
+      >
+        <Text style={styles.modalButtonText}>Huỷ</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.modalButton, { backgroundColor: COLORS.primary }]}
+        onPress={handleSaveEdit}
+      >
+        <Text style={[styles.modalButtonText, { color: "#fff" }]}>
+          Lưu thay đổi
+        </Text>
+      </TouchableOpacity>
+    </View>
+  </ScrollView>
+</View>
         </View>
       </Modal>
 
-      {/* DATE PICKER - NHẬN XE (chỉ ngày) */}
-      <DateTimePickerModal
-        isVisible={isCheckInPickerVisible}
-        mode="date"
-        onConfirm={(date) => {
-          setEditCheckInDate(date);
-          setCheckInPickerVisible(false);
-        }}
-        onCancel={() => setCheckInPickerVisible(false)}
-        date={editCheckInDate}
-      />
-
-      {/* DATE PICKER - TRẢ XE (chỉ ngày) */}
-      <DateTimePickerModal
-        isVisible={isCheckOutPickerVisible}
-        mode="date"
-        onConfirm={(date) => {
-          setEditCheckOutDate(date);
-          setCheckOutPickerVisible(false);
-        }}
-        onCancel={() => setCheckOutPickerVisible(false)}
-        date={editCheckOutDate}
-      />
+     
     </View>
   );
 }
