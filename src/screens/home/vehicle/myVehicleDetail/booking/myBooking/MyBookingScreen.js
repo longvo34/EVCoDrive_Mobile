@@ -30,7 +30,6 @@ export default function MyBookingScreen() {
   const [bookings, setBookings] = useState([]);
   const [vehicle, setVehicle] = useState(null);
 
-  // ✅ LOAD LẠI MỖI KHI MÀN HÌNH ĐƯỢC FOCUS
   useFocusEffect(
     useCallback(() => {
       fetchData();
@@ -66,7 +65,13 @@ export default function MyBookingScreen() {
 
   const formatDate = (date) => {
     if (!date) return "--";
-    return new Date(date).toLocaleString("vi-VN");
+    
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0'); // Tháng bắt đầu từ 0
+    const year = d.getFullYear();
+    
+    return `${day}/${month}/${year}`;
   };
 
   const renderItem = ({ item }) => (

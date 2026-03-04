@@ -74,8 +74,6 @@ const isValid = rawPrice > 0 && percent >= 10;
     setLoading(true);
 
     const rawPrice = Number(price.replace(/\./g, ""));
-
-    // Chỉ confirm nếu có explanation (tức là đã suggest)
     if (explanation) {
       await confirmPriceSuggestion(rawPrice, {
         carInfo: {
