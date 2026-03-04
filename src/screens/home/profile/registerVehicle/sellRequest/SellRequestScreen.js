@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect } from "react";
 import { Alert, Image } from "react-native";
 import EVLoading from "../../../../../components/animation/EVLoading";
-import { suggestPrice } from "../../../../../services/priceSuggestion/priceSuggestion.service";
+import { confirmPriceSuggestion, suggestPrice } from "../../../../../services/priceSuggestion/priceSuggestion.service";
 import { createSellRequest } from "../../../../../services/sellRequest/sellRequest.service";
 import { getVehicleById } from "../../../../../services/vehicle/vehicle.service";
 import styles from "./SellRequestScreen.styles";
@@ -69,18 +69,35 @@ export default function SellRequestScreen({ navigation, route }) {
   const rawPrice = Number(price.replace(/\./g, ""));
 const isValid = rawPrice > 0 && percent >= 10;
 
-  const handleSubmit = async () => {
+ const handleSubmit = async () => {
   try {
     setLoading(true);
+
+    const rawPrice = Number(price.replace(/\./g, ""));
+
+    // Chỉ confirm nếu có explanation (tức là đã suggest)
+    if (explanation) {
+      await confirmPriceSuggestion(rawPrice, {
+        carInfo: {
+          model: vehicle.vehicleModel?.name || "",
+          brand: vehicle.vehicleModel?.brandName || "",
+          year: vehicle.year,
+          odometer: vehicle.odometer,
+          batteryHealth: vehicle.batteryHealth,
+          location: vehicle.currentStation?.address || "",
+        },
+        fraction: percent / 10,
+        daysPerYear: 30,
+        kmLimitPerYear: 2000,
+      });
+    }
 
     const payload = {
       vehicleId,
       totalShares: percent / 10,
-      pricePerShare: Number(price.replace(/\./g, "")),
+      pricePerShare: rawPrice,
       expiredDate: expiredDate.toISOString(),
     };
-
-    console.log("Payload gửi lên:", payload);
 
     await createSellRequest(payload);
 
@@ -94,23 +111,11 @@ const isValid = rawPrice > 0 && percent >= 10;
     ]);
 
   } catch (error) {
-    const apiError = error.response?.data;
-    console.log("API ERROR:", apiError);
-
-    if (apiError?.errorCode === "VAL_3003") {
-      const match = apiError.message?.match(/\d+/);
-      const available = match ? Number(match[0]) : 0;
-
-      if (available > 0) {
-        setPercent(available * 10);
-      }
-
-      Alert.alert("Không đủ cổ phần", `Bạn chỉ còn ${available} cổ phần để bán.`);
-      return;
-    }
-
-    Alert.alert("Lỗi", apiError?.message || "Không thể tạo yêu cầu bán");
-
+    console.log("Submit error:", error.response?.data || error);
+    Alert.alert(
+      "Lỗi",
+      error.response?.data?.message || "Không thể tạo yêu cầu bán"
+    );
   } finally {
     setLoading(false);
   }

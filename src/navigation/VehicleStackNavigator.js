@@ -5,6 +5,8 @@ import BookingScreen from "../screens/home/vehicle/myVehicleDetail/booking/Booki
 import MyBookingScreen from "../screens/home/vehicle/myVehicleDetail/booking/myBooking/MyBookingScreen";
 import MyBookingDetailScreen from "../screens/home/vehicle/myVehicleDetail/booking/myBookingDetail/MyBookingDetailScreen";
 import ExtendedFeaturesScreen from "../screens/home/vehicle/myVehicleDetail/extendFeatures/ExtendedFeaturesScreen";
+import VotingScreen from "../screens/home/vehicle/myVehicleDetail/voting/VotingScreen";
+import VotingDetailScreen from "../screens/home/vehicle/myVehicleDetail/voting/votingDetail/VotingDetailScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -17,6 +19,8 @@ export default function VehicleStackNavigator() {
       <Stack.Screen name="Booking" component={BookingScreen} />
       <Stack.Screen name="MyBooking" component={MyBookingScreen} />
       <Stack.Screen name="MyBookingDetail" component={MyBookingDetailScreen} />
+      <Stack.Screen name="Voting" component={VotingScreen} />
+      <Stack.Screen name="VotingDetail" component={VotingDetailScreen} /> 
     </Stack.Navigator>
   );
 }
