@@ -27,3 +27,11 @@ export const getBookingsByMember = (memberId, params = {}) => {
     },
   });
 };
+
+export const updateBooking = (bookingId, data) => {
+  return api.put(`/bookings/${bookingId}`, data);
+};
+
+export const deleteBooking = (bookingId) => {
+  return api.delete(`/bookings/${bookingId}`);
+};

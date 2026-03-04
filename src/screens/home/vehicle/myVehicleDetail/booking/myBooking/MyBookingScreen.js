@@ -1,13 +1,17 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { useEffect, useState } from "react";
 import {
-    FlatList,
-    Image,
-    StatusBar,
-    Text,
-    TouchableOpacity,
-    View,
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
+import { useCallback, useState } from "react";
+import {
+  FlatList,
+  Image,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import EVLoading from "../../../../../../components/animation/EVLoading";
 import COLORS from "../../../../../../constants/colors";
@@ -26,17 +30,28 @@ export default function MyBookingScreen() {
   const [bookings, setBookings] = useState([]);
   const [vehicle, setVehicle] = useState(null);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // ✅ LOAD LẠI MỖI KHI MÀN HÌNH ĐƯỢC FOCUS
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [])
+  );
 
   const fetchData = async () => {
     try {
       setLoading(true);
+
       const profileRes = await getProfileMember();
       const memberId = profileRes.data.memberId;
+
       const bookingRes = await getBookingsByMember(memberId);
-      setBookings(bookingRes.data.data.items || []);
+
+      const filteredBookings =
+        bookingRes.data.data.items?.filter(
+          (item) => item.bookingStatus !== "Cancelled"
+        ) || [];
+
+      setBookings(filteredBookings);
 
       if (vehicleId) {
         const vehicleRes = await getVehicleById(vehicleId);
@@ -55,32 +70,32 @@ export default function MyBookingScreen() {
   };
 
   const renderItem = ({ item }) => (
-  <TouchableOpacity
-    style={styles.card}
-    activeOpacity={0.8}
-    onPress={() =>
-      navigation.navigate("MyBookingDetail", {
-        bookingId: item.bookingId,
-      })
-    }
-  >
-    <Text style={styles.label}>
-      📝 Mục đích: {item.purpose}
-    </Text>
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.8}
+      onPress={() =>
+        navigation.navigate("MyBookingDetail", {
+          bookingId: item.bookingId,
+        })
+      }
+    >
+      <Text style={styles.label}>
+        📝 Mục đích: {item.purpose}
+      </Text>
 
-    <Text style={styles.label}>
-      📅 Nhận xe: {formatDate(item.checkInDate)}
-    </Text>
+      <Text style={styles.label}>
+        📅 Nhận xe: {formatDate(item.checkInDate)}
+      </Text>
 
-    <Text style={styles.label}>
-      📅 Trả xe: {formatDate(item.checkOutDate)}
-    </Text>
+      <Text style={styles.label}>
+        📅 Trả xe: {formatDate(item.checkOutDate)}
+      </Text>
 
-    <Text style={styles.status}>
-      Trạng thái: {item.bookingStatus}
-    </Text>
-  </TouchableOpacity>
-);
+      <Text style={styles.status}>
+        Trạng thái: {item.bookingStatus}
+      </Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
@@ -109,29 +124,29 @@ export default function MyBookingScreen() {
       {/* ===== VEHICLE INFO ===== */}
       {vehicle && (
         <View style={styles.vehicleCard}>
-  <Image
-    source={{
-      uri: vehicle.images?.[0]?.secureUrl,
-    }}
-    style={styles.vehicleImage}
-  />
-  <View style={styles.vehicleInfoWrapper}>
-    <Text
-      style={styles.vehicleName}
-      numberOfLines={1}
-    >
-      {vehicle.vehicleModel?.name}
-    </Text>
+          <Image
+            source={{
+              uri: vehicle.images?.[0]?.secureUrl,
+            }}
+            style={styles.vehicleImage}
+          />
+          <View style={styles.vehicleInfoWrapper}>
+            <Text
+              style={styles.vehicleName}
+              numberOfLines={1}
+            >
+              {vehicle.vehicleModel?.name}
+            </Text>
 
-    <Text style={styles.vehiclePlate}>
-      🚗 Biển số: {vehicle.licensePlate}
-    </Text>
+            <Text style={styles.vehiclePlate}>
+              🚗 Biển số: {vehicle.licensePlate}
+            </Text>
 
-    <Text style={styles.vehicleInfo}>
-      Màu: {vehicle.color} • Năm: {vehicle.year}
-    </Text>
-  </View>
-</View>
+            <Text style={styles.vehicleInfo}>
+              Màu: {vehicle.color} • Năm: {vehicle.year}
+            </Text>
+          </View>
+        </View>
       )}
 
       {/* ===== BOOKING LIST ===== */}
