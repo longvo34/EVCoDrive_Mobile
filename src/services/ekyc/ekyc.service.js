@@ -30,8 +30,6 @@ export const uploadCCCD = async (frontImage, backImage) => {
   });
 
   console.log("EKYC RESPONSE:", res.data);
-
-  // 🔥 QUAN TRỌNG: parse chuỗi JSON backend trả về
   try {
     const parsed = JSON.parse(res.data.data);
     return parsed?.data?.[0] ?? null;

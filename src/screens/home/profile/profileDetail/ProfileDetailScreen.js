@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
 import {
   Alert,
+  Image,
   ScrollView,
   Text,
   TextInput,
@@ -13,11 +15,10 @@ import EVLoading from "../../../../components/animation/EVLoading";
 import COLORS from "../../../../constants/colors";
 import {
   getUserProfile,
+  updateUserAvatar,
   updateUserProfile,
 } from "../../../../services/user/user.service";
 import styles from "./ProfileDetailScreen.styles";
-
-/* ================= NORMALIZE ================= */
 
 const normalizeDOB = (dob) => {
   if (!dob) return undefined;
@@ -34,12 +35,10 @@ const normalizeGender = (sex) => {
   return undefined;
 };
 
-/* ============================================= */
-
 export default function ProfileDetailScreen({ navigation, route }) {
   const ekycData = route.params?.ekycData;
   const onProfileUpdated = route.params?.onProfileUpdated;
-
+const [avatar, setAvatar] = useState(null);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
     fullName: "",
@@ -137,6 +136,45 @@ export default function ProfileDetailScreen({ navigation, route }) {
     );
   }
 
+ const pickAvatar = async () => {
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    quality: 0.7,
+  });
+
+  if (!result.canceled) {
+    const file = result.assets[0];
+
+    const formData = new FormData();
+
+    formData.append("file", {
+      uri: file.uri,
+      name: file.fileName || "avatar.jpg",
+      type: file.mimeType || "image/jpeg",
+    });
+
+    try {
+      await updateUserAvatar(formData);
+      setAvatar(file); 
+
+      Alert.alert("Thành công", "Cập nhật ảnh đại diện thành công");
+    } catch (error) {
+  console.log("UPLOAD ERROR:", error);
+
+  if (error.response) {
+    console.log("SERVER ERROR:", error.response.data);
+    console.log("STATUS:", error.response.status);
+  } else if (error.request) {
+    console.log("NO RESPONSE FROM SERVER");
+  } else {
+    console.log("AXIOS ERROR:", error.message);
+  }
+
+  Alert.alert("Lỗi", "Upload avatar thất bại");
+}
+  }
+};
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -155,7 +193,7 @@ export default function ProfileDetailScreen({ navigation, route }) {
         />
 
         <Label text="Email" />
-<Input value={form.email} editable={false} />
+        <Input value={form.email} editable={false} />
 
         <Label text="Ngày sinh (YYYY-MM-DD)" />
         <Input
@@ -187,22 +225,67 @@ export default function ProfileDetailScreen({ navigation, route }) {
           value={form.address}
           onChangeText={(v) => setForm({ ...form, address: v })}
         />
-      </ScrollView>
 
-      <View style={styles.bottomContainer}>
+        <Label text="Ảnh đại diện" />
+
+<View style={{ alignItems: "center", marginTop: 10 }}>
+  {avatar ? (
+    <Image
+      source={{ uri: avatar.uri }}
+      style={{
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        marginBottom: 10,
+      }}
+    />
+  ) : (
+    <View
+      style={{
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: "#ddd",
+        justifyContent: "center",
+        alignItems: "center",
+        marginBottom: 10,
+      }}
+    >
+      <Ionicons name="person" size={40} color="#777" />
+    </View>
+  )}
 
   <TouchableOpacity
-  style={styles.ekycBtn}
-  onPress={() => navigation.navigate("EKYC", { fromProfile: true })}
->
-  <Text style={styles.ekycText}>Chụp lại CCCD</Text>
-</TouchableOpacity>
-
-<TouchableOpacity style={styles.bottomBtn} onPress={handleSubmit}>
-  <Text style={styles.bottomText}>Lưu</Text>
-</TouchableOpacity>
-
+    style={{
+      backgroundColor: COLORS.primary,
+      paddingHorizontal: 20,
+      paddingVertical: 8,
+      borderRadius: 6,
+    }}
+    onPress={pickAvatar}
+  >
+    <Text style={{ color: "#fff" }}>Chọn ảnh</Text>
+  </TouchableOpacity>
 </View>
+
+        <View style={{ height: 80 }} />
+      </ScrollView>
+
+     <View style={styles.bottomActions}>
+        <TouchableOpacity
+          style={styles.smallBtn} 
+          onPress={() => navigation.navigate("EKYC", { fromProfile: true })}
+        >
+          <Text style={styles.smallBtnText}>Chụp lại CCCD</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.smallBtn}
+          onPress={handleSubmit}
+        >
+          <Text style={styles.smallBtnText}>Lưu</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }

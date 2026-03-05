@@ -12,3 +12,7 @@ export const getUserProfile = () => {
 export const getUserById = (id) => {
   return api.get(`/user/${id}`);
 };
+
+export const updateUserAvatar = (formData) => {
+  return api.put("/user/avatar", formData);
+};

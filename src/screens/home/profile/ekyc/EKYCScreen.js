@@ -92,8 +92,6 @@ export default function EKYCScreen({ navigation, setIsLoggedIn }) {
               navigation.goBack();
               return;
             }
-
-            // No back screen — clear tokens and go to Login
             try {
               await clearTokens();
             } catch (err) {
