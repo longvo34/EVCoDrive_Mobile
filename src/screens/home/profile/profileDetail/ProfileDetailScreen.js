@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
+  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -145,33 +146,38 @@ const [avatar, setAvatar] = useState(null);
   if (!result.canceled) {
     const file = result.assets[0];
 
+    // normalize uri for iOS (strip file://) and Android keeps as is
+    const uri =
+      Platform.OS === "ios" ? file.uri.replace("file://", "") : file.uri;
+
     const formData = new FormData();
 
     formData.append("file", {
-      uri: file.uri,
+      uri,
       name: file.fileName || "avatar.jpg",
-      type: file.mimeType || "image/jpeg",
+      // expo returns `type` rather than `mimeType` in some versions
+      type: file.mimeType || file.type || "image/jpeg",
     });
 
     try {
       await updateUserAvatar(formData);
-      setAvatar(file); 
+      setAvatar(file);
 
       Alert.alert("Thành công", "Cập nhật ảnh đại diện thành công");
     } catch (error) {
-  console.log("UPLOAD ERROR:", error);
+      console.log("UPLOAD ERROR:", error);
 
-  if (error.response) {
-    console.log("SERVER ERROR:", error.response.data);
-    console.log("STATUS:", error.response.status);
-  } else if (error.request) {
-    console.log("NO RESPONSE FROM SERVER");
-  } else {
-    console.log("AXIOS ERROR:", error.message);
-  }
+      if (error.response) {
+        console.log("SERVER ERROR:", error.response.data);
+        console.log("STATUS:", error.response.status);
+      } else if (error.request) {
+        console.log("NO RESPONSE FROM SERVER");
+      } else {
+        console.log("AXIOS ERROR:", error.message);
+      }
 
-  Alert.alert("Lỗi", "Upload avatar thất bại");
-}
+      Alert.alert("Lỗi", "Upload avatar thất bại");
+    }
   }
 };
 
