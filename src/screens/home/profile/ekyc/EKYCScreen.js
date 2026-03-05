@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRoute } from "@react-navigation/native";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
@@ -19,6 +20,7 @@ export default function EKYCScreen({ navigation, setIsLoggedIn }) {
   const [front, setFront] = useState(null);
   const [back, setBack] = useState(null);
   const [loading, setLoading] = useState(false);
+  const route = useRoute();
 
   useEffect(() => {
     ImagePicker.requestCameraPermissionsAsync();
@@ -64,7 +66,11 @@ export default function EKYCScreen({ navigation, setIsLoggedIn }) {
         return;
       }
 
-      navigation.navigate("ProfileDetail", { ekycData });
+      if (route.params?.fromProfile) {
+  navigation.replace("ProfileDetail", { ekycData });
+} else {
+  navigation.navigate("ProfileDetail", { ekycData });
+}
     } catch (err) {
       console.log("EKYC ERROR:", err.response?.data || err);
       Alert.alert(
