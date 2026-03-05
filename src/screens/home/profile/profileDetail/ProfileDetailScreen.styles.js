@@ -87,4 +87,18 @@ export default StyleSheet.create({
     fontWeight: "600",
     fontSize: 16,
   },
+
+  ekycBtn: {
+  backgroundColor: COLORS.primary,
+  paddingVertical: 16,
+  borderRadius: 14,
+  alignItems: "center",
+  marginTop: 12,
+},
+
+ekycText: {
+  fontWeight: "600",
+  fontSize: 16,
+}
+
 });

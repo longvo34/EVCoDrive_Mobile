@@ -189,9 +189,20 @@ export default function ProfileDetailScreen({ navigation, route }) {
         />
       </ScrollView>
 
-      <TouchableOpacity style={styles.bottomBtn} onPress={handleSubmit}>
-        <Text style={styles.bottomText}>Lưu</Text>
-      </TouchableOpacity>
+      <View style={styles.bottomContainer}>
+
+  <TouchableOpacity
+  style={styles.ekycBtn}
+  onPress={() => navigation.navigate("EKYC", { fromProfile: true })}
+>
+  <Text style={styles.ekycText}>Chụp lại CCCD</Text>
+</TouchableOpacity>
+
+<TouchableOpacity style={styles.bottomBtn} onPress={handleSubmit}>
+  <Text style={styles.bottomText}>Lưu</Text>
+</TouchableOpacity>
+
+</View>
     </SafeAreaView>
   );
 }

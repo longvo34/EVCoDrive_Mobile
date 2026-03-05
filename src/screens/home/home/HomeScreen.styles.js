@@ -67,16 +67,17 @@ export default StyleSheet.create({
   },
 
   carCard: {
-  width: 260,
+  width: "48%",
   borderRadius: 20,
-  backgroundColor: '#fff',
-  marginRight: 16,
-  overflow: 'hidden',
+  backgroundColor: "#fff",
+  marginBottom: 16,
+  overflow: "hidden",
 },
 
 carImage: {
-  width: '100%',
-  height: 180,   
+  width: "100%",
+  height: 120,
+  resizeMode: "contain",
 },
 
 carFooter: {
@@ -149,6 +150,36 @@ emptySearchSubText: {
   color: "#888",
   marginTop: 8,
   textAlign: "center",
+},
+
+overlay: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  justifyContent: "flex-start",
+  alignItems: "flex-end",
+  zIndex: 5
+},
+
+filterDropdown: {
+  width: 200,
+  backgroundColor: "#fff",
+  borderRadius: 12,
+  marginTop: 70,
+  marginRight: 20,
+  paddingVertical: 8,
+
+  shadowColor: "#000",
+  shadowOpacity: 0.1,
+  shadowRadius: 10,
+  elevation: 5
+},
+
+filterItem: {
+  paddingVertical: 10,
+  paddingHorizontal: 14,
 },
 
 });

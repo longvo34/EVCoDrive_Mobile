@@ -1,16 +1,70 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
 import {
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import EVLoading from "../../../../../components/animation/EVLoading";
 import styles from "./ExtendedFeaturesScreen.styles";
 
-export default function ExtendedFeaturesScreen({ navigation }) {
+import Constants from "expo-constants";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
+
+import { getContractsByGroup } from "../../../../../services/contract/contract.service";
+import { getAccessToken } from "../../../../../utils/authStorage";
+
+export default function ExtendedFeaturesScreen({ navigation, route }) {
   const [loading, setLoading] = useState(false);
+
+  const { groupId } = route.params;
+
+  const handleDownloadGroupContract = async () => {
+  try {
+    setLoading(true);
+
+    const res = await getContractsByGroup(groupId);
+
+    const contracts = res?.data?.data || [];
+
+    if (contracts.length === 0) {
+      Alert.alert("Thông báo", "Không tìm thấy hợp đồng của nhóm");
+      return;
+    }
+
+    const token = await getAccessToken();
+    const API_URL = Constants.expoConfig.extra.API_URL;
+
+    for (const contract of contracts) {
+      const fileName = `Hop-dong_${contract.contractNumber}.pdf`;
+      const fileUri = FileSystem.documentDirectory + fileName;
+
+      const downloadUrl = `${API_URL}/contracts/${contract.contractId}/pdf`;
+
+      const { uri } = await FileSystem.downloadAsync(downloadUrl, fileUri, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          mimeType: "application/pdf",
+          dialogTitle: contract.contractNumber,
+          UTI: "com.adobe.pdf",
+        });
+      }
+    }
+  } catch (err) {
+    console.log("DOWNLOAD CONTRACT ERROR", err);
+    Alert.alert("Lỗi", "Không thể tải hợp đồng nhóm");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <View style={{ flex: 1 }}>
@@ -64,12 +118,20 @@ export default function ExtendedFeaturesScreen({ navigation }) {
 
         <View style={styles.grid}>
           {[
-            { label: "Hợp đồng", icon: "document-text-outline" },
+            {
+              label: "Hợp đồng của nhóm",
+              icon: "document-text-outline",
+              action: handleDownloadGroupContract,
+            },
             { label: "Giấy tờ xe", icon: "clipboard-outline" },
             { label: "Bảo hiểm", icon: "shield-checkmark-outline" },
             { label: "Quy định nhóm", icon: "hammer-outline" },
           ].map((item, index) => (
-            <View key={index} style={styles.item}>
+            <TouchableOpacity
+              key={index}
+              style={styles.item}
+              onPress={item.action}
+            >
               <View style={styles.circleGray}>
                 <Ionicons
                   name={item.icon}
@@ -78,7 +140,7 @@ export default function ExtendedFeaturesScreen({ navigation }) {
                 />
               </View>
               <Text style={styles.itemText}>{item.label}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
