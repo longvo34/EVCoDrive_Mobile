@@ -27,3 +27,12 @@ export const verifyContractSignature = (contractId, otp) => {
 export const getContractsByMember = (memberId) => {
   return api.get(`/contracts/member/${memberId}`);
 };
+
+export const getContractsByGroup = (groupId, contractTypeCode) => {
+  return api.get("/contracts/group", {
+    params: {
+      groupId,
+      contractTypeCode,
+    },
+  });
+};

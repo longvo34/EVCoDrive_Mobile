@@ -22,42 +22,6 @@ export default StyleSheet.create({
     marginBottom: 14,
   },
   label: {
-    color: COLORS.gray,
-    fontSize: 13,
-  },
-  value: {
-    fontSize: 16,
-    color: COLORS.text,
-    marginTop: 4,
-  },
-  updateBtn: {
-    marginTop: 30,
-    backgroundColor: COLORS.primary,
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  updateText: {
-    fontWeight: "600",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: COLORS.text,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 16,
-    color: COLORS.text,
-  },
-  label: {
     fontSize: 13,
     color: COLORS.gray,
     marginBottom: 6,
@@ -73,18 +37,51 @@ export default StyleSheet.create({
   inputDisabled: {
     backgroundColor: "#EFEFEF",
   },
-  row2: {
+  header: {
     flexDirection: "row",
-  },
-  bottomBtn: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 16,
-    borderRadius: 14,
     alignItems: "center",
-    marginTop: 12,
+    justifyContent: "space-between",
+    marginBottom: 20,
   },
-  bottomText: {
+  headerTitle: {
+    fontSize: 18,
     fontWeight: "600",
-    fontSize: 16,
+    color: COLORS.text,
   },
+
+  bottomActions: {
+    position: "absolute",
+    bottom: 20,
+    left: 20,
+    right: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  smallBtn: {
+    flex: 1,
+    backgroundColor: COLORS.primary,         
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  ekycSmallBtn: {
+    backgroundColor: COLORS.primary + "22",
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+
+  saveSmallBtn: {
+    backgroundColor: COLORS.primary,
+  },
+
+  smallBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.white,                    
+  },
+
 });
