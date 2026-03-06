@@ -11,6 +11,7 @@ import {
 import EVLoading from "../../../../components/animation/EVLoading";
 import COLORS from "../../../../constants/colors";
 import { getCoOwnerGroupDetails } from "../../../../services/coOwnerGroup/coOwnerGroup.service";
+import { getGroupWalletByGroupId } from "../../../../services/groupWallet/groupWallet.service";
 import { getVehicleById } from "../../../../services/vehicle/vehicle.service";
 import styles from "./MyVehicleDetailScreen.styles";
 
@@ -20,10 +21,21 @@ export default function MyVehicleDetailScreen({ navigation, route }) {
   const [loading, setLoading] = useState(true);
   const [groupDetail, setGroupDetail] = useState(null);
   const [vehicle, setVehicle] = useState(null);
+  const [groupWallet, setGroupWallet] = useState(null);
 
-  useEffect(() => {
-    fetchGroupDetail();
-  }, []);
+ useEffect(() => {
+  fetchGroupDetail();
+  fetchGroupWallet();
+}, []);
+
+  const fetchGroupWallet = async () => {
+  try {
+    const res = await getGroupWalletByGroupId(groupId);
+    setGroupWallet(res.data.data);
+  } catch (error) {
+    console.log("Lỗi lấy group wallet:", error);
+  }
+};
 
   const fetchGroupDetail = async () => {
     try {
@@ -185,7 +197,9 @@ export default function MyVehicleDetailScreen({ navigation, route }) {
           </View>
 
           <Text style={styles.walletSub}>Số dư hiện tại</Text>
-          <Text style={styles.walletAmount}>0đ</Text>
+          <Text style={styles.walletAmount}>
+  {(groupWallet?.balance || 0).toLocaleString()}đ
+</Text>
         </View>
 
         {/* Stats  */}

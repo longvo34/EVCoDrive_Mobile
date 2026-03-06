@@ -110,7 +110,7 @@ export default StyleSheet.create({
     color: "#065f46", 
   },
 
-  textPending: {
+  textReadyToActive: {
     color: "#92400e", 
   },
 

@@ -72,7 +72,7 @@ export default function MyVehicleScreen() {
       console.log("rawData:", rawData);
       console.log("Is rawData array:", Array.isArray(rawData));
 
-      const STATUS_ORDER = ["Active", "Pending", "Inactive"];
+      const STATUS_ORDER = ["Active", "ReadyToActive", "Inactive"];
       console.log("STATUS_ORDER:", STATUS_ORDER);
 
       const sorted = Array.isArray(rawData)
@@ -154,10 +154,10 @@ export default function MyVehicleScreen() {
       badge: styles.badgePublished,
       textStyle: styles.textPublished,
     },
-    Pending: {
+    ReadyToActive: {
       text: "Chờ phê duyệt",
       badge: styles.badgePartial,
-      textStyle: styles.textPending,
+      textStyle: styles.textReadyToActive,
     },
     Inactive: {
       text: "Không hoạt động",
