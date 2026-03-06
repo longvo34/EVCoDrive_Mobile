@@ -44,7 +44,7 @@ export default function HomeScreen() {
           setUser(profileRes.data.data);
 
           const groupRes = await getGroupsWithAvailableShares();
-          const groupsData = groupRes.data.data;
+          const groupsData = groupRes.data.data?.items || [];
 
           const groupsWithImages = await Promise.all(
             groupsData.map(async (group) => {
