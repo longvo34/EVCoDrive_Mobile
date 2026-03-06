@@ -241,7 +241,7 @@ const [selectedDates, setSelectedDates] = useState([]);
                   fontWeight: "bold",
                 }}
               >
-                Cập nhật booking
+                Cập nhật đặt xe
               </Text>
             </TouchableOpacity>
 
@@ -260,7 +260,7 @@ const [selectedDates, setSelectedDates] = useState([]);
                   fontWeight: "bold",
                 }}
               >
-                Huỷ booking
+                Huỷ đặt xe
               </Text>
             </TouchableOpacity>
           </View>
