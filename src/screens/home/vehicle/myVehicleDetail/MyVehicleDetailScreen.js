@@ -1,10 +1,13 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useState } from "react";
 import {
+  Alert,
   Image,
+  Modal,
   ScrollView,
   StatusBar,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -12,6 +15,8 @@ import EVLoading from "../../../../components/animation/EVLoading";
 import COLORS from "../../../../constants/colors";
 import { getCoOwnerGroupDetails } from "../../../../services/coOwnerGroup/coOwnerGroup.service";
 import { getGroupWalletByGroupId } from "../../../../services/groupWallet/groupWallet.service";
+import { transferToGroup } from "../../../../services/memberWallet/memberWallet.service";
+import { getProfileMember } from "../../../../services/profile/profile.service";
 import { getVehicleById } from "../../../../services/vehicle/vehicle.service";
 import styles from "./MyVehicleDetailScreen.styles";
 
@@ -22,11 +27,33 @@ export default function MyVehicleDetailScreen({ navigation, route }) {
   const [groupDetail, setGroupDetail] = useState(null);
   const [vehicle, setVehicle] = useState(null);
   const [groupWallet, setGroupWallet] = useState(null);
+  const [memberId, setMemberId] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
 
  useEffect(() => {
   fetchGroupDetail();
   fetchGroupWallet();
 }, []);
+
+useEffect(() => {
+  fetchMemberProfile();
+}, []);
+
+const fetchMemberProfile = async () => {
+  try {
+    const res = await getProfileMember();
+
+    const id = res.data.memberId;
+
+    console.log("MEMBER ID:", id);
+
+    setMemberId(id);
+  } catch (error) {
+    console.log("Get profile error:", error);
+  }
+};
 
   const fetchGroupWallet = async () => {
   try {
@@ -86,6 +113,54 @@ export default function MyVehicleDetailScreen({ navigation, route }) {
         return "Không xác định";
     }
   };
+
+  const handleTransferToGroup = async () => {
+  try {
+    if (!amount) {
+      Alert.alert("Thông báo", "Vui lòng nhập số tiền");
+      return;
+    }
+
+    const data = {
+      memberId: memberId,
+      coOwnerGroupId: groupId,
+      amount: Number(amount.replace(/\./g, "")),
+      note: note || "Nạp tiền vào nhóm",
+    };
+
+    const res = await transferToGroup(data);
+
+    console.log("TRANSFER SUCCESS:", res.data);
+
+    Alert.alert("Thành công", "Nạp tiền vào nhóm thành công");
+
+    setModalVisible(false);
+    setAmount("");
+    setNote("");
+
+    fetchGroupWallet();
+  } catch (error) {
+    console.log("TRANSFER ERROR:", error);
+
+    Alert.alert("Lỗi", "Không thể nạp tiền");
+  }
+};
+
+const formatVND = (value) => {
+  if (!value) return "";
+
+  const number = value.replace(/\D/g, ""); 
+
+  return Number(number).toLocaleString("vi-VN");
+};
+
+const handleAmountChange = (text) => {
+  const numericValue = text.replace(/\D/g, ""); 
+
+  const formatted = Number(numericValue).toLocaleString("vi-VN");
+
+  setAmount(formatted);
+};
 
   return (
     <View style={styles.container}>
@@ -200,6 +275,12 @@ export default function MyVehicleDetailScreen({ navigation, route }) {
           <Text style={styles.walletAmount}>
   {(groupWallet?.balance || 0).toLocaleString()}đ
 </Text>
+  <TouchableOpacity
+    style={styles.topUpButton}
+    onPress={() => setModalVisible(true)}
+  >
+    <Text style={styles.topUpText}>Nạp tiền vào ví nhóm</Text>
+  </TouchableOpacity>
         </View>
 
         {/* Stats  */}
@@ -323,6 +404,55 @@ export default function MyVehicleDetailScreen({ navigation, route }) {
           ))}
         </View>
       </ScrollView>
+    <Modal visible={modalVisible} transparent animationType="fade">
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+
+      {/* Title */}
+      <View style={styles.modalHeader}>
+        <Ionicons name="wallet-outline" size={22} color={COLORS.primary} />
+        <Text style={styles.modalTitle}>Nạp tiền vào quỹ</Text>
+      </View>
+
+      {/* Amount */}
+      <Text style={styles.label}>Số tiền</Text>
+      <TextInput
+        value={amount}
+        onChangeText={handleAmountChange}
+        keyboardType="numeric"
+        placeholder="Nhập số tiền muốn nạp"
+        style={styles.input}
+      />
+
+      {/* Note */}
+      <Text style={styles.label}>Ghi chú</Text>
+      <TextInput
+        value={note}
+        onChangeText={setNote}
+        placeholder="Nhập ghi chú (tuỳ chọn)"
+        style={styles.input}
+      />
+
+      {/* Buttons */}
+      <View style={styles.modalButtons}>
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => setModalVisible(false)}
+        >
+          <Text style={styles.cancelText}>Huỷ</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.confirmButton}
+          onPress={handleTransferToGroup}
+        >
+          <Text style={styles.confirmText}>Nạp tiền</Text>
+        </TouchableOpacity>
+      </View>
+
+    </View>
+  </View>
+</Modal>
     </View>
   );
 }

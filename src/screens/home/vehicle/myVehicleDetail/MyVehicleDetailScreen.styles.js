@@ -276,4 +276,98 @@ gridValue: {
   fontWeight: "700",
   marginTop: 4,
 },
+
+topUpButton: {
+  marginTop: 15,
+  backgroundColor: COLORS.primary,
+  paddingVertical: 10,
+  borderRadius: 10,
+  alignItems: "center",
+},
+
+topUpText: {
+  color: COLORS.white,
+  fontSize: 15,
+  fontWeight: "600",
+},
+
+modalContainer: {
+  flex: 1,
+  backgroundColor: "rgba(0,0,0,0.45)",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+modalContent: {
+  width: "85%",
+  backgroundColor: COLORS.white,
+  borderRadius: 18,
+  padding: 22,
+  shadowColor: "#000",
+  shadowOpacity: 0.15,
+  shadowRadius: 10,
+  elevation: 8,
+},
+
+modalHeader: {
+  flexDirection: "row",
+  alignItems: "center",
+  marginBottom: 20,
+},
+
+modalTitle: {
+  fontSize: 18,
+  fontWeight: "600",
+  marginLeft: 8,
+  color: "#111827",
+},
+
+label: {
+  fontSize: 14,
+  color: "#6b7280",
+  marginTop: 8,
+},
+
+input: {
+  borderWidth: 1,
+  borderColor: "#e5e7eb",
+  borderRadius: 10,
+  padding: 12,
+  marginTop: 6,
+  fontSize: 15,
+},
+
+modalButtons: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  marginTop: 25,
+},
+
+cancelButton: {
+  flex: 1,
+  paddingVertical: 12,
+  borderRadius: 10,
+  borderWidth: 1,
+  borderColor: "#e5e7eb",
+  alignItems: "center",
+  marginRight: 10,
+},
+
+cancelText: {
+  color: "#6b7280",
+  fontWeight: "500",
+},
+
+confirmButton: {
+  flex: 1,
+  backgroundColor: COLORS.primary,
+  paddingVertical: 12,
+  borderRadius: 10,
+  alignItems: "center",
+},
+
+confirmText: {
+  color: "#fff",
+  fontWeight: "600",
+},
 });
