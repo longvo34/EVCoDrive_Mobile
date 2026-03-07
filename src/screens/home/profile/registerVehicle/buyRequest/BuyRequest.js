@@ -29,6 +29,38 @@ export default function BuyRequestDetailScreen() {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [reason, setReason] = useState("");
 
+  const getStatusText = (status) => {
+    switch (status) {
+      case "Processing":
+      case "Proccessing":
+        return "Chờ duyệt";
+      case "Completed":
+      case "Complete":
+        return "Hoàn thành";
+      case "Cancelled":
+      case "Cancel":
+        return "Đã hủy";
+      default:
+        return status || "Không xác định";
+    }
+  };
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case "Processing":
+      case "Proccessing":
+        return { color: "#d97706" };
+      case "Completed":
+      case "Complete":
+        return { color: "#10b981" };
+      case "Cancelled":
+      case "Cancel":
+        return { color: "#ef4444" };
+      default:
+        return { color: COLORS.gray };
+    }
+  };
+
   useEffect(() => {
     fetchBuyRequestDetail();
   }, []);
@@ -124,10 +156,8 @@ export default function BuyRequestDetailScreen() {
           <View style={styles.cardHeader}>
             <Text style={styles.groupName}>{request.groupName || "Yêu cầu mua xe"}</Text>
             <View style={styles.statusBadge}>
-              <Text style={styles.statusText}>
-                {request.status === "Processing" || request.status === "Proccessing"
-                  ? "Chờ xử lý"
-                  : request.status}
+              <Text style={[styles.statusText, getStatusStyle(request.status)]}>
+                {getStatusText(request.status)}
               </Text>
             </View>
           </View>

@@ -4,7 +4,7 @@ import {
   useNavigation,
   useRoute,
 } from "@react-navigation/native";
-import { useCallback, useState } from "react"; // THÊM useCallback
+import { useCallback, useState } from "react";
 import {
   Alert,
   Image,
@@ -236,7 +236,7 @@ export default function BookingScreen() {
       setSelectedDates([]);
       setPurpose("");
       setNote("");
-      await loadBookings();           // load lại ngay sau khi đặt thành công
+      await loadBookings();          
       navigation.goBack();
     } catch (err) {
       console.log("❌ BOOKING ERROR FULL:", err);

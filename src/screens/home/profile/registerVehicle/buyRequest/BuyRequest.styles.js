@@ -53,7 +53,6 @@ export default StyleSheet.create({
   statusText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#d97706",
   },
   infoRow: {
     flexDirection: "row",
